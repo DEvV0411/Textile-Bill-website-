@@ -23,7 +23,7 @@ function StockItem({ product, index }: { product: Product; index: number }) {
       transition={{ delay: index * 0.05 }}
       className="group"
     >
-      <td className="py-5 px-6">
+      <td data-label="Item / SKU" className="py-5 px-6">
         <div className="flex items-center gap-4">
           <div className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
@@ -37,12 +37,12 @@ function StockItem({ product, index }: { product: Product; index: number }) {
           </div>
         </div>
       </td>
-      <td className="py-5 px-6">
+      <td data-label="Category" className="py-5 px-6">
         <span className="px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-slate-200">
           {product.category}
         </span>
       </td>
-      <td className="py-5 px-6 text-right">
+      <td data-label="On-Hand" className="py-5 px-6 text-right">
         <div>
           <p className={cn("text-xs font-bold tabular-nums", isLow ? "text-rose-600" : "text-slate-900")}>
             {product.currentStock.toLocaleString('en-IN')} <span className="text-[10px] font-medium opacity-60">MTR</span>
@@ -52,13 +52,13 @@ function StockItem({ product, index }: { product: Product; index: number }) {
           </p>
         </div>
       </td>
-      <td className="py-5 px-6 text-center">
+      <td data-label="Lots" className="py-5 px-6 text-center">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 text-slate-900 text-[10px] font-bold uppercase rounded-lg border border-slate-200">
           <Warehouse size={10} />
           {product.lotCount} Lots
         </div>
       </td>
-      <td className="py-5 px-6 text-right">
+      <td data-label="Health" className="py-5 px-6 text-right">
         {isLow ? (
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold uppercase rounded-lg border border-rose-100">
             <AlertCircle size={10} />
@@ -72,7 +72,7 @@ function StockItem({ product, index }: { product: Product; index: number }) {
         )}
       </td>
       <td className="py-5 px-6">
-        <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-end lg:opacity-0 group-hover:opacity-100 transition-opacity">
           <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
             <ChevronRight size={16} />
           </button>
@@ -202,72 +202,132 @@ export default function InventoryOverview() {
       {/* Add Stock Modal */}
       <AnimatePresence>
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowAddModal(false)}
-              className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
-            >
-              <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Stock Purchase Inward</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Generating New Lot ID</p>
-                </div>
-                <button onClick={() => setShowAddModal(false)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Plus size={28} className="rotate-45" /></button>
-              </div>
-              
-              <div className="p-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Select Catalog Product</label>
-                  <select className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all cursor-pointer">
-                    {state.products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Quantity (Mtrs)</label>
-                    <input type="number" className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all" placeholder="0.00" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Cost Rate / Mtr</label>
-                    <input type="number" className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all" placeholder="₹ 0.00" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Warehouse Destination</label>
-                  <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                    {['Main Godown', 'Showroom', 'Factory'].map(w => (
-                      <button key={w} className="flex-1 min-w-[100px] py-3 rounded-xl border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:border-slate-900 hover:text-slate-900 hover:bg-slate-50 transition-all">{w}</button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-8 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
-                <button onClick={() => setShowAddModal(false)} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900">Discard</button>
-                <button 
-                  onClick={() => {
-                    toast.success('Inventory updated! 📦');
-                    setShowAddModal(false);
-                  }}
-                  className="btn-primary !h-11 px-12 text-sm"
-                >
-                  <Save size={18} />
-                  Record Inward
-                </button>
-              </div>
-            </motion.div>
-          </div>
+          <StockInwardModal onClose={() => setShowAddModal(false)} />
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function StockInwardModal({ onClose }: { onClose: () => void }) {
+  const { state, dispatch } = useApp();
+  const [productId, setProductId] = useState(state.products[0]?.id || '');
+  const [qty, setQty] = useState('');
+  const [rate, setRate] = useState('');
+  const [warehouse, setWarehouse] = useState('Main Godown');
+
+  const handleSave = () => {
+    if (!productId || !qty || !rate) return toast.error('All fields are required');
+    
+    const lot = {
+      id: 'LOT-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+      lotNo: 'LOT-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+      productId,
+      productName: state.products.find(p => p.id === productId)?.name || '',
+      supplierId: 's-new',
+      supplierName: 'New Supplier',
+      quantity: Number(qty),
+      costRate: Number(rate),
+      warehouse,
+      date: new Date().toISOString().split('T')[0],
+    };
+
+    dispatch({ type: 'ADD_LOT', payload: lot });
+    toast.success('Inventory updated! 📦');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+      >
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Stock Purchase Inward</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Generating New Lot ID</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Plus size={28} className="rotate-45" /></button>
+        </div>
+        
+        <div className="p-8 space-y-6">
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Select Catalog Product</label>
+            <select 
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all cursor-pointer"
+            >
+              {state.products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Quantity (Mtrs)</label>
+              <input 
+                type="number" 
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all" 
+                placeholder="0.00" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Cost Rate / Mtr</label>
+              <input 
+                type="number" 
+                value={rate}
+                onChange={(e) => setRate(e.target.value)}
+                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all" 
+                placeholder="₹ 0.00" 
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Warehouse Destination</label>
+            <div className="flex flex-wrap sm:flex-nowrap gap-2">
+              {['Main Godown', 'Showroom', 'Factory'].map(w => (
+                <button 
+                  key={w} 
+                  onClick={() => setWarehouse(w)}
+                  className={cn(
+                    "flex-1 min-w-[100px] py-3 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all",
+                    warehouse === w 
+                      ? "border-slate-900 text-slate-900 bg-slate-50" 
+                      : "border-slate-200 text-slate-400 hover:border-slate-400"
+                  )}
+                >
+                  {w}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-8 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
+          <button onClick={onClose} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900">Discard</button>
+          <button 
+            onClick={handleSave}
+            className="btn-primary !h-11 px-12 text-sm"
+          >
+            <Save size={18} />
+            Record Inward
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
     </div>
   );
 }

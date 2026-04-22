@@ -208,6 +208,9 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
                   <Field label="Client Group">
                     <Select value={form.group} options={['Wholesale', 'Retail', 'Export']} onChange={v => set('group', v as CustomerGroup)} />
                   </Field>
+                  <Field label="Agent / Broker">
+                    <Input value={form.broker} onChange={v => set('broker', v)} placeholder="Independent Agent Name" />
+                  </Field>
                   <Field label="Payment Terms">
                     <Select value={form.paymentTerms} options={['Immediate', '15 days', '30 days', '45 days', '60 days']} onChange={v => set('paymentTerms', v as PaymentTerms)} />
                   </Field>

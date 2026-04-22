@@ -117,7 +117,26 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, initialState);
+  // Initialize from localStorage if available
+  const [state, dispatch] = useReducer(appReducer, initialState, (initial) => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('textile_portal_state');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return { ...parsed, currentPage: 'dashboard' }; // Reset to dashboard on refresh
+        } catch (e) {
+          return initial;
+        }
+      }
+    }
+    return initial;
+  });
+
+  // Persist to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('textile_portal_state', JSON.stringify(state));
+  }, [state]);
 
   const navigate = (page: Page) => dispatch({ type: 'SET_PAGE', payload: page });
 

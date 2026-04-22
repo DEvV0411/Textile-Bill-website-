@@ -40,6 +40,22 @@ export default function ReportsCenter() {
       .slice(0, 5);
   }, [state.invoices]);
 
+  // ─── Chart Data ────────────────────────────────────────────────────────────
+  const monthlyData = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const totals = Array(12).fill(0);
+    
+    state.invoices.forEach(inv => {
+      const date = new Date(inv.createdAt);
+      if (date.getFullYear() === currentYear) {
+        totals[date.getMonth()] += inv.total;
+      }
+    });
+
+    const max = Math.max(...totals, 100000);
+    return totals.map(t => ({ amount: t, height: (t / max) * 100 }));
+  }, [state.invoices]);
+
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
@@ -50,10 +66,25 @@ export default function ReportsCenter() {
         </div>
         <div className="flex flex-row sm:flex-row gap-3 w-full sm:w-auto">
           <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
-            <Calendar size={14} /> Last 30 Days
+            <Calendar size={14} /> {new Date().getFullYear()} Forecast
           </button>
-          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg hover:bg-black transition-all">
-            <Download size={14} /> Export Data
+          <button 
+            onClick={() => {
+              const csv = [
+                ['Invoice #', 'Customer', 'Date', 'Amount', 'Status'],
+                ...state.invoices.map(inv => [inv.number, inv.customerName, inv.createdAt.split('T')[0], inv.total, inv.status])
+              ].map(r => r.join(',')).join('\n');
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg hover:bg-black transition-all"
+          >
+            <Download size={14} /> Export CSV
           </button>
         </div>
       </div>
@@ -83,32 +114,31 @@ export default function ReportsCenter() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Sales Chart Placeholder */}
+        {/* Sales Chart */}
         <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Revenue Forecast</h3>
+            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Revenue Forecast ({new Date().getFullYear()})</h3>
             <div className="flex gap-4">
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-900" />
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Current</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Previous</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Real Revenue</span>
               </div>
             </div>
           </div>
           <div className="h-64 flex items-end justify-between gap-3 pt-4">
-            {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 50, 95].map((h, i) => (
+            {monthlyData.map((d, i) => (
               <div key={i} className="flex-1 group relative">
                 <motion.div 
                    initial={{ height: 0 }}
-                   animate={{ height: `${h}%` }}
+                   animate={{ height: `${d.height}%` }}
                    transition={{ delay: i * 0.05, duration: 1 }}
-                   className="w-full bg-slate-900 rounded-t-lg group-hover:bg-black transition-all cursor-pointer shadow-md"
+                   className={cn(
+                     "w-full bg-slate-900 rounded-t-lg group-hover:bg-black transition-all cursor-pointer shadow-md",
+                     d.amount === 0 && "h-[2px] bg-slate-100"
+                   )}
                 />
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10 shadow-xl border border-white/10">
-                  ₹{h * 10}k
+                  {formatINRCompact(d.amount)}
                 </div>
               </div>
             ))}
@@ -173,11 +203,11 @@ export default function ReportsCenter() {
             <tbody className="divide-y divide-slate-50">
               {recentInvoices.map((inv) => (
                 <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="py-5 px-8 text-xs font-bold text-slate-900">{inv.number}</td>
-                  <td className="py-5 px-8 text-xs font-bold text-slate-900 uppercase">{inv.customerName}</td>
-                  <td className="py-5 px-8 text-xs text-slate-400 font-medium">{formatDate(inv.createdAt)}</td>
-                  <td className="py-5 px-8 text-xs font-bold text-slate-900 text-right tabular-nums">{formatINR(inv.total)}</td>
-                  <td className="py-5 px-8 text-center">
+                  <td data-label="Invoice #" className="py-5 px-8 text-xs font-bold text-slate-900">{inv.number}</td>
+                  <td data-label="Customer" className="py-5 px-8 text-xs font-bold text-slate-900 uppercase">{inv.customerName}</td>
+                  <td data-label="Date" className="py-5 px-8 text-xs text-slate-400 font-medium">{formatDate(inv.createdAt)}</td>
+                  <td data-label="Amount" className="py-5 px-8 text-xs font-bold text-slate-900 text-right tabular-nums">{formatINR(inv.total)}</td>
+                  <td data-label="Status" className="py-5 px-8 text-center">
                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border ${
                       inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
                       inv.status === 'PART-PAID' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-200'

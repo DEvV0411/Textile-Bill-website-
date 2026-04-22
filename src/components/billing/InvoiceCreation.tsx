@@ -470,7 +470,10 @@ export default function InvoiceCreation() {
                 <FileText size={16} /> Draft Invoice
               </button>
               <button 
-                onClick={() => window.print()}
+                onClick={() => {
+                  toast.success('Preparing high-fidelity print...');
+                  setTimeout(() => window.print(), 500);
+                }}
                 className="btn-ghost !h-10 px-4 text-xs"
               >
                 <Printer size={16} /> Print
@@ -646,6 +649,41 @@ export default function InvoiceCreation() {
           </div>
         </div>
       </div>
+      {/* Print Template (Hidden from UI, visible only in Print) */}
+      {selectedCustomer && (
+        <PrintTemplate 
+          customer={selectedCustomer}
+          invoice={{
+            id: 'temp',
+            number: generateInvoiceNumber(state.invoiceCounter),
+            type: invoiceType,
+            customerId: selectedCustomerId,
+            customerName: selectedCustomer.legalName,
+            customerGSTIN: selectedCustomer.gstin,
+            customerState: selectedCustomer.state,
+            lines,
+            ...totals,
+            status: 'DRAFT',
+            irn: null,
+            ewayBillNo,
+            dispatchDate,
+            terms: 'Payment due within 30 days. No returns after 7 days.',
+            transporter,
+            vehicleNo,
+            paymentTerms: selectedCustomer.paymentTerms,
+            bankAccount: 'HDFC Bank - 50100123456789',
+            notes,
+            payments: [],
+            createdAt: new Date().toISOString(),
+            issuedAt: null,
+            sentAt: null,
+            viewedAt: null,
+            paidAt: null,
+          }}
+        />
+      )}
     </div>
   );
 }
+
+import PrintTemplate from './PrintTemplate';

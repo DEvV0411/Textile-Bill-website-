@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, IndianRupee, FileText, Users, ShoppingBag, Clock, Calendar } from 'lucide-react';
 import { useApp } from '@/lib/store';
 import { formatINRCompact, cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
 // ─── Count-Up Hook ────────────────────────────────────────────────────────────
 function useCountUp(target: number, duration = 1200) {
@@ -86,7 +87,7 @@ function KPICard({ title, value, prefix = '', suffix = '', icon, change, compact
 
 // ─── Recent Activity ──────────────────────────────────────────────────────────
 function RecentActivity() {
-  const { state, navigate } = useApp();
+  const { state, dispatch, navigate } = useApp();
   const recent = state.invoices.slice(-6).reverse();
 
   return (
@@ -120,11 +121,33 @@ function RecentActivity() {
                 <p className="text-xs font-bold text-slate-900 uppercase tracking-tight truncate">{inv.number}</p>
                 <p className="text-[10px] font-medium text-slate-500 mt-0.5 truncate uppercase tracking-tighter">{inv.customerName}</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-900 italic">{formatINRCompact(inv.total)}</p>
-                <div className="mt-1">
-                  <StatusBadge status={inv.status} small />
+              <div className="text-right flex items-center gap-4">
+                <div className="hidden sm:block">
+                  <p className="text-sm font-bold text-slate-900 italic">{formatINRCompact(inv.total)}</p>
+                  <div className="mt-1">
+                    <StatusBadge status={inv.status} small />
+                  </div>
                 </div>
+                {inv.status !== 'PAID' && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const payment = {
+                        id: 'pay-' + Math.random().toString(36).substring(2, 5),
+                        amount: inv.total,
+                        mode: 'Cash' as const,
+                        referenceNo: 'REC-' + inv.number,
+                        date: new Date().toISOString()
+                      };
+                      dispatch({ type: 'ADD_PAYMENT', payload: { invoiceId: inv.id, payment } });
+                      toast.success('Payment recorded successfully!');
+                    }}
+                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
+                    title="Quick Mark Paid"
+                  >
+                    <IndianRupee size={16} />
+                  </button>
+                )}
               </div>
             </motion.div>
           ))
