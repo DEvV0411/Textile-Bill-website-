@@ -33,9 +33,9 @@ export default function SettingsPortal() {
     <div className="flex flex-col lg:flex-row gap-8 pb-10">
       {/* Sidebar Nav */}
       <div className="lg:w-64 flex-shrink-0">
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-gray-100 bg-gray-50/50">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Portal Settings</h3>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-24">
+          <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Portal Settings</h3>
           </div>
           <nav className="p-2 flex lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-1">
             {SECTIONS.map(s => (
@@ -43,10 +43,10 @@ export default function SettingsPortal() {
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
                 className={cn(
-                  "flex-shrink-0 lg:flex-shrink w-auto lg:w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap",
+                  "flex-shrink-0 lg:flex-shrink w-auto lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
                   activeSection === s.id 
-                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20" 
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-slate-900 text-white shadow-md" 
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
                 {s.icon}
@@ -63,27 +63,27 @@ export default function SettingsPortal() {
           key={activeSection}
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-8"
+          className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10"
         >
           {/* BUSINESS PROFILE */}
           {activeSection === 'business' && (
-            <div className="space-y-8">
+            <div className="space-y-10">
               <div>
-                <h3 className="text-xl font-serif font-black text-brand-text-dark uppercase tracking-tight">Business Profile</h3>
-                <p className="text-sm text-brand-text-muted mt-1">This information will appear on your issued invoices and reports.</p>
+                <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Business Profile</h3>
+                <p className="text-sm text-slate-500 mt-1 font-medium">This information will appear on your issued invoices and reports.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-                <div className="sm:col-span-2 flex flex-col sm:flex-row items-center gap-6 sm:gap-8 p-6 bg-violet-50/30 rounded-3xl border border-violet-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="sm:col-span-2 flex flex-col sm:flex-row items-center gap-8 p-8 bg-slate-50 border border-slate-200 rounded-2xl">
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-3xl bg-white border-2 border-dashed border-violet-200 flex flex-col items-center justify-center text-violet-400 cursor-pointer hover:bg-violet-50 hover:border-violet-400 transition-all group shadow-sm">
+                    <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-white hover:border-slate-900 transition-all group shadow-sm">
                       <Plus size={24} />
-                      <span className="text-[10px] font-black uppercase mt-2">Brand Logo</span>
+                      <span className="text-[10px] font-bold uppercase mt-2">Brand Logo</span>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-brand-text-dark uppercase tracking-tight">Company Identity</h4>
-                    <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">Your logo will be optimized for PDF generation.<br/>PNG, SVG or WEBP (Max 2MB)</p>
+                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Company Identity</h4>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed font-medium uppercase tracking-tighter">Your logo will be optimized for PDF generation.<br/>PNG, SVG or WEBP (Max 2MB)</p>
                   </div>
                 </div>
 
@@ -96,7 +96,7 @@ export default function SettingsPortal() {
                 <div className="sm:col-span-2">
                   <Field label="Registered Office Address">
                     <textarea 
-                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-3xl text-sm font-bold text-brand-text-dark focus:ring-4 focus:ring-violet-500/5 focus:border-violet-400 outline-none h-28 resize-none transition-all"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white outline-none h-28 resize-none transition-all uppercase"
                       defaultValue="12, Ring Road, Textile Market, Surat, Gujarat - 395003"
                     />
                   </Field>
@@ -107,10 +107,10 @@ export default function SettingsPortal() {
 
           {/* TAXATION */}
           {activeSection === 'taxation' && (
-            <div className="space-y-8">
+            <div className="space-y-10">
               <div>
-                <h3 className="text-xl font-serif font-black text-brand-text-dark uppercase tracking-tight">Taxation & Legal</h3>
-                <p className="text-sm text-brand-text-muted mt-1">Compliance details for GST and Income Tax filings.</p>
+                <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Taxation & Legal</h3>
+                <p className="text-sm text-slate-500 mt-1 font-medium">Compliance details for GST and Income Tax filings.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -121,10 +121,10 @@ export default function SettingsPortal() {
                   <Input defaultValue="AABCR1234A" className="font-mono uppercase" />
                 </Field>
                 <Field label="LUT Number (For Exports)">
-                  <Input placeholder="Enter LUT number if applicable" />
+                  <Input placeholder="Enter LUT number if applicable" className="uppercase" />
                 </Field>
                 <Field label="E-Way Bill Username">
-                  <Input defaultValue="rathitex_surat" />
+                  <Input defaultValue="rathitex_surat" className="lowercase" />
                 </Field>
               </div>
             </div>
@@ -132,32 +132,32 @@ export default function SettingsPortal() {
 
           {/* BANKING */}
           {activeSection === 'banking' && (
-            <div className="space-y-8">
+            <div className="space-y-10">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Banking & Payments</h3>
-                  <p className="text-sm text-gray-400">Manage bank accounts for payment collections.</p>
+                  <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Banking & Payments</h3>
+                  <p className="text-sm text-slate-500 mt-1 font-medium">Manage bank accounts for payment collections.</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-violet-50 text-violet-600 rounded-xl text-xs font-bold hover:bg-violet-100">
+                <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-md">
                   <Plus size={14} /> Add Account
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="p-6 border border-violet-100 bg-violet-50/30 rounded-3xl flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-                      <Building2 size={24} className="text-violet-600" />
+                <div className="p-6 border border-slate-200 bg-slate-50 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className="w-12 h-12 bg-white rounded-xl border border-slate-200 flex items-center justify-center shadow-sm">
+                      <Building2 size={24} className="text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-gray-900">HDFC Bank</h4>
-                      <p className="text-xs text-gray-400">A/C: 501002341234 • IFSC: HDFC0001234</p>
+                      <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight">HDFC Bank</h4>
+                      <p className="text-xs text-slate-400 font-bold tabular-nums">A/C: 501002341234 • IFSC: HDFC0001234</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="px-2 py-0.5 bg-violet-600 text-white text-[10px] font-black rounded uppercase">Default</span>
-                    <button className="p-2 text-gray-300 hover:text-red-500 transition-colors">
-                      <Trash2 size={16} />
+                  <div className="flex items-center gap-4">
+                    <span className="px-2.5 py-1 bg-slate-900 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest border border-slate-900">Default</span>
+                    <button className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </div>
@@ -167,29 +167,29 @@ export default function SettingsPortal() {
 
           {/* BILLING DEFAULTS */}
           {activeSection === 'billing' && (
-            <div className="space-y-8">
+            <div className="space-y-10">
               <div>
-                <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Billing Defaults</h3>
-                <p className="text-sm text-gray-400">Configure standard invoice settings and terms.</p>
+                <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Billing Defaults</h3>
+                <p className="text-sm text-slate-500 mt-1 font-medium">Configure standard invoice settings and terms.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <Field label="Invoice Prefix">
-                  <Input defaultValue="INV/2026/" />
+                  <Input defaultValue="INV/2026/" className="uppercase" />
                 </Field>
                 <Field label="Next Invoice Number">
                   <Input defaultValue="0001" type="number" />
                 </Field>
                 <Field label="Default Tax State">
-                  <Input defaultValue="Gujarat" />
+                  <Input defaultValue="Gujarat" className="uppercase" />
                 </Field>
                 <Field label="Default Currency">
-                  <Input defaultValue="INR (₹)" disabled />
+                  <Input defaultValue="INR (₹)" disabled className="bg-slate-100" />
                 </Field>
                 <div className="sm:col-span-2">
                   <Field label="Standard Terms & Conditions">
                     <textarea 
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:ring-2 focus:ring-violet-500/10 outline-none h-32 resize-none"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white outline-none h-32 resize-none transition-all uppercase tracking-tight leading-relaxed"
                       defaultValue="1. Goods once sold will not be taken back.&#10;2. Interest @18% will be charged if not paid within 30 days.&#10;3. Subject to Surat Jurisdiction."
                     />
                   </Field>
@@ -199,19 +199,19 @@ export default function SettingsPortal() {
           )}
 
           {/* Footer Actions */}
-          <div className="mt-12 pt-8 border-t border-gray-100 flex justify-end gap-4">
-            <button className="px-6 py-2.5 text-sm font-bold text-gray-400 hover:text-gray-600">
+          <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between items-center">
+            <button className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">
               Discard Changes
             </button>
             <button 
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl text-sm font-black shadow-lg shadow-violet-500/20 hover:scale-[1.02] transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-10 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-xl hover:bg-black transition-all disabled:opacity-50"
             >
               {saving ? 'Saving...' : (
                 <>
                   <Save size={18} />
-                  Save Portal Settings
+                  Save Changes
                 </>
               )}
             </button>
@@ -224,8 +224,8 @@ export default function SettingsPortal() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <div className="space-y-2">
+      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{label}</label>
       {children}
     </div>
   );
@@ -236,7 +236,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input 
       {...props}
       className={cn(
-        "w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-brand-text-dark outline-none focus:ring-4 focus:ring-violet-500/5 focus:border-violet-400 focus:bg-white transition-all disabled:opacity-50",
+        "w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all disabled:opacity-50",
         props.className
       )}
     />

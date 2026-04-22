@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { AppState, AppAction, Customer, Invoice, Payment, Lot, Page } from './types';
+import { AppState, AppAction, Page } from './types';
 import { INITIAL_CUSTOMERS, INITIAL_PRODUCTS, INITIAL_LOTS } from './mockData';
 
 // ─── Initial State ────────────────────────────────────────────────────────────
@@ -98,6 +98,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'LOGOUT':
       return { ...state, isAuthenticated: false, currentPage: 'dashboard' };
+
+    case 'BULK_ADD_CUSTOMERS':
+      return { ...state, customers: [...state.customers, ...action.payload] };
 
     default:
       return state;

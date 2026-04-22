@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, Trash2, Save, Search, Users,
-  CheckCircle, FileText, Zap
+  CheckCircle, FileText, Zap, Printer
 } from 'lucide-react';
 import { useApp } from '@/lib/store';
 import { 
@@ -15,6 +15,7 @@ import {
   formatINR, amountToWords, generateInvoiceNumber, today, generateId,
   cn, formatDate, formatINRCompact, creditUsagePercent
 } from '@/lib/utils';
+import { SELLER_STATE } from '@/lib/mockData';
 import toast from 'react-hot-toast';
 
 // ─── Main Invoice Creation ──────────────────────────────────────────────────
@@ -27,25 +28,46 @@ export default function InvoiceCreation() {
   const [productSearch, setProductSearch] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [transporter, setTransporter] = useState('');
+  const [vehicleNo, setVehicleNo] = useState('');
+  const [dispatchDate, setDispatchDate] = useState(today());
+  const [ewayBillNo, setEwayBillNo] = useState<string | null>(null);
+
+  const selectedCustomer = state.customers.find(c => c.id === selectedCustomerId);
+  const isInterState = selectedCustomer && selectedCustomer.state !== SELLER_STATE;
+
+  // ─── Keyboard Shortcuts ────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle search on 'S' key if not typing in an input
+      if ((e.key === 's' || e.key === 'S') && 
+          !(e.target instanceof HTMLInputElement) && 
+          !(e.target instanceof HTMLTextAreaElement)) {
+        setShowProductSearch(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const updateLine = (id: string, updates: Partial<InvoiceLine>) => {
     setLines(prev => prev.map(l => {
       if (l.id !== id) return l;
       const nl = { ...l, ...updates };
       const taxable = nl.qtyPrimary * nl.rate;
-      const gst = (taxable * nl.gstRate) / 100;
+      const gstTotal = (taxable * nl.gstRate) / 100;
+      
       return {
         ...nl,
         taxableAmount: taxable,
-        gstAmount: gst,
-        lineTotal: taxable + gst,
-        cgst: gst / 2,
-        sgst: gst / 2
+        gstAmount: gstTotal,
+        lineTotal: taxable + gstTotal,
+        cgst: isInterState ? 0 : gstTotal / 2,
+        sgst: isInterState ? 0 : gstTotal / 2,
+        igst: isInterState ? gstTotal : 0
       };
     }));
   };
-
-  const selectedCustomer = state.customers.find(c => c.id === selectedCustomerId);
 
   // ─── Calculations ──────────────────────────────────────────────────────────
   const totals = useMemo(() => {
@@ -59,6 +81,23 @@ export default function InvoiceCreation() {
     const roundOff = Math.round(total) - total;
     return { subtotal, totalDiscount, cgst, sgst, igst, freight, roundOff, total: Math.round(total) };
   }, [lines]);
+
+  const handleGenerateEWayBill = () => {
+    if (!transporter || !vehicleNo) return toast.error('Transporter and Vehicle details required');
+    if (totals.total < 50000) return toast.error('E-Way Bill not mandatory for amounts below ₹50,000');
+    
+    toast.promise(
+      new Promise(resolve => setTimeout(resolve, 1500)),
+      {
+        loading: 'Syncing with GST Portal...',
+        success: () => {
+          setEwayBillNo(Math.floor(100000000000 + Math.random() * 900000000000).toString());
+          return 'E-Way Bill Generated! 🚛';
+        },
+        error: 'Portal Sync Failed',
+      }
+    );
+  };
 
   const handleIssue = (finalStatus: InvoiceStatus, overrideType?: InvoiceType) => {
     if (!selectedCustomerId) return toast.error('Please select a customer');
@@ -79,10 +118,12 @@ export default function InvoiceCreation() {
         lines,
         ...totals,
         status: finalStatus,
-        irn: null,
-        terms: 'Payment due within 30 days',
-        transporter: '',
-        vehicleNo: '',
+        irn: type === 'Tax Invoice' ? `IRN-${generateId().substring(0, 12).toUpperCase()}` : null,
+        ewayBillNo,
+        dispatchDate,
+        terms: 'Payment due within 30 days. No returns after 7 days.',
+        transporter,
+        vehicleNo,
         paymentTerms: selectedCustomer!.paymentTerms,
         bankAccount: 'HDFC Bank - 50100123456789',
         notes,
@@ -105,18 +146,18 @@ export default function InvoiceCreation() {
   return (
     <div className="flex flex-col lg:flex-row gap-8 lg:h-[calc(100vh-140px)] lg:overflow-hidden pb-20 lg:pb-0">
       {/* LEFT: Customer Selection */}
-      <div className="w-full lg:w-80 flex flex-col gap-6 lg:overflow-y-auto custom-scrollbar lg:pr-2">
-        <div className="premium-card p-6 space-y-6 bg-white/50 backdrop-blur-sm">
+      <div className="w-full lg:w-80 flex flex-col gap-6 lg:overflow-y-auto no-scrollbar lg:pr-2">
+        <div className="premium-card p-6 space-y-6 bg-white border-slate-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-text-dark">Entity Select</h3>
-            <Users size={16} className="text-violet-600" />
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Entity Selection</h3>
+            <Users size={16} className="text-slate-400" />
           </div>
           
           <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={14} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
               <select
-                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-violet-500/10 focus:bg-white appearance-none transition-all"
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white appearance-none transition-all cursor-pointer"
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value)}
               >
@@ -131,31 +172,31 @@ export default function InvoiceCreation() {
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-5 bg-violet-600 rounded-3xl text-white shadow-xl shadow-violet-500/30"
+                className="p-5 bg-slate-900 rounded-2xl text-white shadow-xl"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xs font-black uppercase shadow-inner">
+                  <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold uppercase border border-white/10">
                     {selectedCustomer.legalName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black uppercase truncate">{selectedCustomer.legalName}</p>
-                    <p className="text-[10px] text-violet-200 font-bold uppercase tracking-widest mt-0.5">{selectedCustomer.city}</p>
+                    <p className="text-xs font-bold uppercase truncate">{selectedCustomer.legalName}</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{selectedCustomer.city}</p>
                   </div>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-end">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-violet-200">Outstanding</span>
-                    <span className="text-sm font-serif font-black italic">{formatINRCompact(selectedCustomer.outstanding)}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Outstanding</span>
+                    <span className="text-sm font-bold italic tabular-nums">{formatINRCompact(selectedCustomer.outstanding)}</span>
                   </div>
-                  <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${creditUsagePercent(selectedCustomer.outstanding, selectedCustomer.creditLimit)}%` }}
-                      className="h-full bg-white rounded-full shadow-[0_0_8px_#fff]"
+                      className="h-full bg-white rounded-full"
                     />
                   </div>
-                  <div className="flex justify-between text-[8px] font-black uppercase tracking-tighter opacity-60">
+                  <div className="flex justify-between text-[8px] font-bold uppercase tracking-tighter opacity-50">
                     <span>Used Credit</span>
                     <span>Limit: {formatINRCompact(selectedCustomer.creditLimit)}</span>
                   </div>
@@ -164,8 +205,8 @@ export default function InvoiceCreation() {
             )}
           </div>
           
-          <div className="pt-4 border-t border-gray-100">
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand-text-muted mb-3">Recently Active</p>
+          <div className="pt-4 border-t border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Recently Active</p>
             <div className="flex flex-wrap gap-2">
               {state.recentCustomerIds.slice(0, 4).map(id => {
                 const c = state.customers.find(cust => cust.id === id);
@@ -175,10 +216,10 @@ export default function InvoiceCreation() {
                     key={id}
                     onClick={() => setSelectedCustomerId(id)}
                     className={cn(
-                      "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all",
+                      "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tighter transition-all border",
                       selectedCustomerId === id 
-                        ? "bg-violet-100 text-violet-600 border-violet-200" 
-                        : "bg-gray-50 text-gray-400 border border-transparent hover:border-gray-200"
+                        ? "bg-slate-900 text-white border-slate-900" 
+                        : "bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-400"
                     )}
                   >
                     {c.legalName.split(' ')[0]}
@@ -189,35 +230,90 @@ export default function InvoiceCreation() {
           </div>
         </div>
 
-        <div className="premium-card p-6 bg-white/50 backdrop-blur-sm">
-          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-text-dark mb-4">Internal Memo</h3>
+        <div className="premium-card p-6 bg-white border-slate-200">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-4">Internal Memo</h3>
           <textarea
             placeholder="Notes for internal reference..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs outline-none focus:bg-white focus:ring-4 focus:ring-violet-500/5 transition-all resize-none"
+            className="w-full h-24 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all resize-none font-medium"
           />
+        </div>
+
+        <div className="premium-card p-6 space-y-4 bg-white border-slate-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Logistics</h3>
+            <Zap size={14} className={cn(ewayBillNo ? "text-emerald-500" : "text-slate-300")} />
+          </div>
+          
+          <div className="space-y-3">
+            <input 
+              type="text"
+              placeholder="Transporter Name"
+              value={transporter}
+              onChange={e => setTransporter(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all"
+            />
+            <input 
+              type="text"
+              placeholder="Vehicle Number"
+              value={vehicleNo}
+              onChange={e => setVehicleNo(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all"
+            />
+            <input 
+              type="date"
+              value={dispatchDate}
+              onChange={e => setDispatchDate(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all"
+            />
+          </div>
+
+          {totals.total >= 50000 && !ewayBillNo && (
+            <button 
+              onClick={handleGenerateEWayBill}
+              className="w-full py-3 bg-slate-50 border border-slate-200 rounded-xl text-[9px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all"
+            >
+              Generate E-Way Bill
+            </button>
+          )}
+
+          {ewayBillNo && (
+            <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+              <p className="text-[8px] font-bold uppercase text-emerald-600 tracking-widest">E-Way Bill Active</p>
+              <p className="text-[11px] font-bold text-emerald-900 mt-1 tabular-nums">{ewayBillNo}</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* MAIN: Itemization */}
       <div className="flex-1 flex flex-col gap-6 min-w-0">
-        <div className="premium-card flex-1 flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
-            <div>
-              <h2 className="text-xl font-serif font-black text-brand-text-dark uppercase tracking-tight">Draft Transaction</h2>
-              <p className="text-[10px] font-black text-brand-text-muted uppercase tracking-widest mt-1">
-                {generateInvoiceNumber(state.invoiceCounter)} • {formatDate(today())}
-              </p>
+        <div className="premium-card flex-1 flex flex-col overflow-hidden border-slate-200">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Draft Transaction</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                  {generateInvoiceNumber(state.invoiceCounter)} • {formatDate(today())}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowProductSearch(true)}
+                className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all border border-slate-100"
+                title="Search Product (S)"
+              >
+                <Search size={18} />
+              </button>
             </div>
-            <div className="flex bg-gray-100 p-1 rounded-2xl">
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
               {(['Tax Invoice', 'Estimate'] as InvoiceType[]).map(t => (
                 <button
                   key={t}
                   onClick={() => setInvoiceType(t)}
                   className={cn(
-                    "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                    invoiceType === t ? "bg-white text-violet-600 shadow-sm" : "text-brand-text-muted hover:text-brand-text-dark"
+                    "px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                    invoiceType === t ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"
                   )}
                 >
                   {t}
@@ -226,211 +322,163 @@ export default function InvoiceCreation() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <table className="premium-table">
-              <thead>
-                <tr>
-                  <th className="w-12">#</th>
-                  <th>Product / SKU Details</th>
-                  <th className="text-center w-24">Qty (M)</th>
-                  <th className="text-center w-20">Qty (P)</th>
-                  <th className="text-right w-28">Rate</th>
-                  <th className="text-right w-32">Total</th>
-                  <th className="w-12"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {lines.map((line, idx) => (
-                  <tr key={line.id} className="group">
-                    <td className="py-4 px-6 text-[10px] font-black text-gray-300">{idx + 1}</td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-400 group-hover:bg-violet-100 group-hover:text-violet-600 transition-colors">
-                          {line.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-xs font-black text-brand-text-dark uppercase truncate max-w-[180px]">{line.name}</p>
-                          <p className="text-[10px] font-bold text-brand-text-muted mt-0.5 tracking-tighter uppercase">{line.variant} • HSN {line.hsn}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-center tabular-nums">
-                      <input 
-                        type="number"
-                        value={line.qtyPrimary || ''}
-                        onChange={(e) => updateLine(line.id, { qtyPrimary: Number(e.target.value) })}
-                        className="w-16 bg-transparent text-center text-xs font-bold text-brand-text-dark outline-none focus:bg-violet-50 rounded p-1 transition-all"
-                        placeholder="0"
-                      />
-                    </td>
-                    <td className="py-4 px-6 text-center tabular-nums">
-                      <input 
-                        type="number"
-                        value={line.qtySecondary || ''}
-                        onChange={(e) => updateLine(line.id, { qtySecondary: Number(e.target.value) })}
-                        className="w-16 bg-transparent text-center text-xs text-brand-text-muted outline-none focus:bg-violet-50 rounded p-1 transition-all"
-                        placeholder="0"
-                      />
-                    </td>
-                    <td className="py-4 px-6 text-right tabular-nums">
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-[10px] text-gray-300">₹</span>
-                        <input 
-                          type="number"
-                          value={line.rate || ''}
-                          onChange={(e) => updateLine(line.id, { rate: Number(e.target.value) })}
-                          className="w-20 bg-transparent text-right text-xs font-bold text-brand-text-dark outline-none focus:bg-violet-50 rounded p-1 transition-all"
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-right tabular-nums text-xs font-black text-violet-600 italic">
-                      ₹{line.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4 px-6">
-                      <button 
-                        onClick={() => setLines(lines.filter(l => l.id !== line.id))}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={7} className="p-6">
-                    <div className="relative">
-                      {!showProductSearch ? (
-                        <button 
-                          onClick={() => setShowProductSearch(true)}
-                          className="w-full py-4 border-2 border-dashed border-violet-100 rounded-3xl flex items-center justify-center gap-3 text-violet-600 text-xs font-black uppercase tracking-widest hover:bg-violet-50 transition-all group"
-                        >
-                          <Plus size={18} className="group-hover:rotate-90 transition-transform" /> Add Product from Catalog
-                        </button>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-400" size={18} />
-                            <input
-                              autoFocus
-                              type="text"
-                              placeholder="Search product by name, code or HSN..."
-                              value={productSearch}
-                              onChange={(e) => setProductSearch(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setShowProductSearch(false);
-                                  setProductSearch('');
-                                }
-                              }}
-                              className="w-full pl-12 pr-4 py-4 bg-violet-50/50 border-2 border-violet-100 rounded-3xl text-sm font-bold text-brand-text-dark outline-none focus:border-violet-400 focus:bg-white transition-all"
-                            />
-                            <button 
-                              onClick={() => { setShowProductSearch(false); setProductSearch(''); }}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-violet-600 hover:text-violet-800"
-                            >
-                              Cancel
-                            </button>
+          <div className="flex-1 overflow-y-auto no-scrollbar">
+            {lines.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
+                  <FileText size={32} />
+                </div>
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-widest">No Items Added</h4>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-tighter max-w-[180px] mb-8">Select fabrics from the catalog to begin drafting this invoice.</p>
+                <button 
+                  onClick={() => setShowProductSearch(true)}
+                  className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all active:scale-95"
+                >
+                  <Search size={16} /> Search & Add Product
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                <table className="premium-table border-b border-slate-100">
+                  <thead>
+                    <tr>
+                      <th className="w-12">#</th>
+                      <th>Product / SKU Details</th>
+                      <th className="text-center w-24">Qty (M)</th>
+                      <th className="text-center w-20">Qty (P)</th>
+                      <th className="text-right w-28">Rate</th>
+                      <th className="text-right w-32">Total</th>
+                      <th className="w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {lines.map((line, idx) => (
+                      <tr key={line.id} className="group">
+                        <td data-label="Item" className="py-4 px-6 text-[10px] font-bold text-slate-300">{idx + 1}</td>
+                        <td data-label="Product" className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                              {line.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-900 uppercase truncate max-w-[180px]">{line.name}</p>
+                              <p className="text-[10px] font-medium text-slate-400 mt-0.5 tracking-tighter uppercase">{line.variant} • HSN {line.hsn}</p>
+                            </div>
                           </div>
-
-                          {productSearch.trim() && (
-                            <motion.div 
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="bg-white border border-violet-100 rounded-3xl shadow-xl overflow-hidden max-h-64 overflow-y-auto custom-scrollbar"
-                            >
-                              {state.products
-                                .filter(p => 
-                                  p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
-                                  p.code.toLowerCase().includes(productSearch.toLowerCase()) ||
-                                  p.hsn.includes(productSearch)
-                                )
-                                .map(product => (
-                                  <button
-                                    key={product.id}
-                                    onClick={() => {
-                                      const newLine: InvoiceLine = {
-                                        id: generateId(),
-                                        productId: product.id,
-                                        sku: product.code,
-                                        name: product.name,
-                                        variant: 'Standard',
-                                        hsn: product.hsn,
-                                        qtyPrimary: 0,
-                                        qtySecondary: 0,
-                                        rate: product.sellingRate,
-                                        discount: 0,
-                                        taxableAmount: 0,
-                                        gstRate: product.gstRate,
-                                        cgst: 0,
-                                        sgst: 0,
-                                        igst: 0,
-                                        gstAmount: 0,
-                                        lineTotal: 0
-                                      };
-                                      setLines([...lines, newLine]);
-                                      setShowProductSearch(false);
-                                      setProductSearch('');
-                                    }}
-                                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-violet-50 transition-colors border-b border-gray-50 last:border-0"
-                                  >
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-xs font-black text-gray-400">
-                                        {product.name.charAt(0)}
-                                      </div>
-                                      <div className="text-left">
-                                        <p className="text-xs font-black text-brand-text-dark uppercase">{product.name}</p>
-                                        <p className="text-[10px] font-bold text-brand-text-muted mt-0.5 tracking-widest">{product.code} • HSN {product.hsn}</p>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-xs font-black text-violet-600 italic">₹{product.sellingRate.toLocaleString('en-IN')}</p>
-                                      <p className="text-[9px] font-bold text-brand-text-muted mt-0.5">GST {product.gstRate}%</p>
-                                    </div>
-                                  </button>
-                                ))}
-                              {state.products.filter(p => 
-                                p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
-                                p.code.toLowerCase().includes(productSearch.toLowerCase())
-                              ).length === 0 && (
-                                <div className="p-12 text-center">
-                                  <p className="text-xs font-bold text-brand-text-muted italic">No products found matching &quot;{productSearch}&quot;</p>
-                                </div>
-                              )}
-                            </motion.div>
-                          )}
-                        </div>
-                      )}
+                        </td>
+                        <td data-label="Quantity (M)" className="py-4 px-6 text-center tabular-nums">
+                          <input 
+                            type="number"
+                            value={line.qtyPrimary || ''}
+                            onChange={(e) => updateLine(line.id, { qtyPrimary: Number(e.target.value) })}
+                            className="w-16 bg-transparent text-center text-xs font-bold text-slate-900 outline-none focus:bg-slate-50 rounded p-1 transition-all"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td data-label="Quantity (P)" className="py-4 px-6 text-center tabular-nums">
+                          <input 
+                            type="number"
+                            value={line.qtySecondary || ''}
+                            onChange={(e) => updateLine(line.id, { qtySecondary: Number(e.target.value) })}
+                            className="w-16 bg-transparent text-center text-xs text-slate-400 outline-none focus:bg-slate-50 rounded p-1 transition-all"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td data-label="Rate" className="py-4 px-6 text-right tabular-nums">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-[10px] text-slate-300 sm:inline hidden">₹</span>
+                            <input 
+                              type="number"
+                              value={line.rate || ''}
+                              onChange={(e) => updateLine(line.id, { rate: Number(e.target.value) })}
+                              className="w-20 bg-transparent text-right text-xs font-bold text-slate-900 outline-none focus:bg-slate-50 rounded p-1 transition-all"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </td>
+                        <td data-label="Subtotal" className="py-4 px-6 text-right tabular-nums text-xs font-bold text-slate-900 italic">
+                          ₹{line.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-4 px-6 flex justify-end">
+                          <button 
+                            onClick={() => setLines(lines.filter(l => l.id !== line.id))}
+                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all lg:opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                {/* Tax & Calculation Breakdown */}
+                <div className="p-6 bg-slate-50/30 flex justify-between gap-8 border-b border-slate-100">
+                  <div className="flex-1">
+                    <button 
+                      onClick={() => setShowProductSearch(true)}
+                      className="flex items-center gap-2 text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:bg-slate-100 px-4 py-2 rounded-xl transition-all border border-slate-200"
+                    >
+                      <Plus size={14} /> Add Another Item
+                    </button>
+                  </div>
+                  <div className="w-64 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Taxable Amount</span>
+                      <span className="text-xs font-bold text-slate-900 tabular-nums">₹{totals.subtotal.toLocaleString('en-IN')}</span>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    {isInterState ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">IGST (Inter-State)</span>
+                        <span className="text-xs font-bold text-emerald-700 tabular-nums">₹{totals.igst.toLocaleString('en-IN')}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">CGST (Central)</span>
+                          <span className="text-xs font-bold text-slate-900 tabular-nums">₹{totals.cgst.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">SGST (State)</span>
+                          <span className="text-xs font-bold text-slate-900 tabular-nums">₹{totals.sgst.toLocaleString('en-IN')}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          
-          <div className="p-6 border-t border-gray-50 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4">
+
+          <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setLines([])} className="px-4 py-2 rounded-xl border border-red-100 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-50 transition-all">Clear All</button>
-              <button className="px-4 py-2 rounded-xl border border-gray-200 text-gray-400 text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all">Save Template</button>
+              <button onClick={() => setLines([])} className="px-4 py-2 rounded-lg border border-slate-200 text-rose-600 text-[9px] font-bold uppercase tracking-widest hover:bg-rose-50 hover:border-rose-200 transition-all">Clear All</button>
+              <button className="px-4 py-2 rounded-lg border border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest hover:bg-white hover:border-slate-300 transition-all">Save Template</button>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
               <button 
                 onClick={() => handleIssue('DRAFT')}
-                className="btn-ghost h-[40px] px-4 text-xs"
+                className="btn-ghost !h-10 px-4 text-xs"
               >
                 <Save size={16} /> Save Draft
               </button>
               <button 
                 onClick={() => handleIssue('ISSUED', 'Draft Invoice')}
-                className="btn-secondary h-[40px] px-4 text-xs"
+                className="btn-secondary !h-10 px-4 text-xs"
               >
                 <FileText size={16} /> Draft Invoice
               </button>
               <button 
+                onClick={() => window.print()}
+                className="btn-ghost !h-10 px-4 text-xs"
+              >
+                <Printer size={16} /> Print
+              </button>
+              <button 
                 disabled={saving}
                 onClick={() => handleIssue('ISSUED', 'Tax Invoice')}
-                className="btn-primary h-[40px] px-6 text-xs min-w-[140px]"
+                className="btn-primary !h-10 px-6 text-xs min-w-[140px]"
               >
                 {saving ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}><Zap size={16} /></motion.div>
@@ -444,52 +492,156 @@ export default function InvoiceCreation() {
             </div>
           </div>
         </div>
+
+        {/* Product Catalog Search Overlay */}
+        {showProductSearch && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
+            >
+              <div className="p-6 border-b border-slate-100 flex items-center gap-4">
+                <Search className="text-slate-400" size={20} />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Search fabric name, code or HSN..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="flex-1 bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:text-slate-300"
+                />
+                <button 
+                  onClick={() => { setShowProductSearch(false); setProductSearch(''); }}
+                  className="text-[10px] font-bold uppercase text-slate-400 hover:text-slate-900 tracking-widest"
+                >
+                  ESC to Close
+                </button>
+              </div>
+
+              <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                {state.products
+                  .filter(p => 
+                    p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
+                    p.code.toLowerCase().includes(productSearch.toLowerCase()) ||
+                    p.hsn.includes(productSearch)
+                  )
+                  .map(product => (
+                    <button
+                      key={product.id}
+                      onClick={() => {
+                        const newLine: InvoiceLine = {
+                          id: generateId(),
+                          productId: product.id,
+                          sku: product.code,
+                          name: product.name,
+                          variant: 'Standard',
+                          hsn: product.hsn,
+                          qtyPrimary: 0,
+                          qtySecondary: 0,
+                          rate: product.sellingRate,
+                          discount: 0,
+                          taxableAmount: 0,
+                          gstRate: product.gstRate,
+                          cgst: 0,
+                          sgst: 0,
+                          igst: 0,
+                          gstAmount: 0,
+                          lineTotal: 0
+                        };
+                        setLines([...lines, newLine]);
+                        setShowProductSearch(false);
+                        setProductSearch('');
+                      }}
+                      className="w-full px-8 py-5 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
+                    >
+                      <div className="flex items-center gap-5">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-sm font-bold text-slate-900 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                          {product.name.charAt(0)}
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{product.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 mt-1 tracking-widest uppercase">{product.code} • HSN {product.hsn}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] font-bold text-slate-900 tabular-nums italic">₹{product.sellingRate.toLocaleString('en-IN')}</p>
+                        <p className={cn(
+                          "text-[9px] font-bold mt-1 uppercase tracking-tighter",
+                          product.currentStock < product.lowStockThreshold ? "text-rose-500" : "text-emerald-600"
+                        )}>
+                          Stock: {product.currentStock} {product.primaryUnit}s
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                {state.products.filter(p => 
+                  p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
+                  p.code.toLowerCase().includes(productSearch.toLowerCase())
+                ).length === 0 && (
+                  <div className="p-20 text-center">
+                    <div className="w-16 h-16 bg-slate-50 rounded-3xl mx-auto flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
+                      <Search size={28} />
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">No matching fabrics found</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
 
       {/* RIGHT: Totals & Summary */}
       <div className="lg:w-72 flex flex-col gap-6">
-        <div className="premium-card p-8 space-y-8 bg-white/50 backdrop-blur-sm sticky top-0">
+        <div className="premium-card p-8 space-y-8 bg-white border-slate-200 shadow-sm sticky top-0">
           <div className="space-y-4">
-            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-brand-text-muted">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
               <span>Subtotal</span>
-              <span className="font-serif tabular-nums text-brand-text-dark">{formatINR(totals.subtotal)}</span>
+              <span className="tabular-nums text-slate-900 font-bold">{formatINR(totals.subtotal)}</span>
             </div>
-            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-brand-text-muted">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
               <span>Total Discount</span>
-              <span className="font-serif tabular-nums text-emerald-500">-{formatINR(totals.totalDiscount)}</span>
+              <span className="tabular-nums text-emerald-600 font-bold">-{formatINR(totals.totalDiscount)}</span>
             </div>
             
-            <div className="pt-4 border-t border-dashed border-gray-100 space-y-3">
-              <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase">
+            <div className="pt-4 border-t border-dashed border-slate-100 space-y-3">
+              <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase">
                 <span>CGST (Central)</span>
                 <span className="tabular-nums">{formatINR(totals.cgst)}</span>
               </div>
-              <div className="flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase">
+              <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase">
                 <span>SGST (State)</span>
                 <span className="tabular-nums">{formatINR(totals.sgst)}</span>
               </div>
+              {totals.igst > 0 && (
+                <div className="flex justify-between items-center text-[9px] font-bold text-emerald-600 uppercase">
+                  <span>IGST (Inter-State)</span>
+                  <span className="tabular-nums">{formatINR(totals.igst)}</span>
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-brand-text-muted pt-4 border-t border-gray-100">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-500 pt-4 border-t border-slate-100">
               <span>Round Off</span>
-              <span className="font-serif tabular-nums text-brand-text-dark">{totals.roundOff.toFixed(2)}</span>
+              <span className="tabular-nums text-slate-900 font-bold">{totals.roundOff.toFixed(2)}</span>
             </div>
           </div>
 
-          <div className="pt-6 border-t-2 border-brand-text-dark/5">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-muted mb-2 text-center">Grand Total</p>
+          <div className="pt-6 border-t-2 border-slate-900/5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2 text-center">Grand Total</p>
             <motion.h4 
               key={totals.total}
-              initial={{ scale: 1.1, color: '#7C3AED' }}
-              animate={{ scale: 1, color: '#1E1B4B' }}
-              className="text-4xl font-serif font-black text-center tabular-nums leading-none"
+              initial={{ scale: 1.05 }}
+              animate={{ scale: 1 }}
+              className="text-4xl font-bold text-center tabular-nums leading-none text-slate-900"
             >
-              <span className="text-violet-600 text-xl font-bold align-top mr-1">₹</span>
+              <span className="text-slate-400 text-xl font-bold align-top mr-1">₹</span>
               {totals.total.toLocaleString('en-IN')}
             </motion.h4>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 italic text-[10px] font-bold text-gray-400 text-center leading-relaxed">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 italic text-[10px] font-bold text-slate-400 text-center leading-relaxed">
             {amountToWords(totals.total)}
           </div>
         </div>

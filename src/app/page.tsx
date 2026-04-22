@@ -33,7 +33,7 @@ export default function Home() {
 
   if (!state.isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0F0C29]">
+      <div className="min-h-screen bg-slate-50">
         <Toaster position="top-right" />
         <LoginPage />
       </div>
@@ -41,21 +41,21 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 selection:bg-violet-100 selection:text-violet-700">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-900 selection:text-white">
       <Toaster position="top-right" />
       
       {/* Navigation */}
       <Sidebar mobileOpen={mobileMenuOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
       
       {/* Main Content Area */}
-      <main className="lg:pl-64 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="lg:pl-72 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={state.currentPage}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
               {renderPage()}

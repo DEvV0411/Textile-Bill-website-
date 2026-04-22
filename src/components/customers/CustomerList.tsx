@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, ChevronUp, ChevronDown, Eye, Edit2, FileText, Users } from 'lucide-react';
+import { Search, Plus, ChevronUp, ChevronDown, Edit2, FileText, Users, Upload } from 'lucide-react';
 import { useApp } from '@/lib/store';
 import { Customer } from '@/lib/types';
-import { formatINRCompact, formatDate, creditUsagePercent, cn } from '@/lib/utils';
+import { formatINRCompact, cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/dashboard/Dashboard';
 import CustomerForm from './CustomerForm';
+import ImportCustomersModal from './ImportCustomersModal';
 
 type FilterChip = 'All' | 'Overdue' | 'Active' | 'Inactive';
 type SortKey = 'code' | 'legalName' | 'city' | 'outstanding' | 'lastTransaction';
@@ -23,7 +24,7 @@ function SortBtn({ label, sortKey, current, dir, onClick }: {
   return (
     <button
       onClick={() => onClick(sortKey)}
-      className={`flex items-center gap-1 text-xs font-semibold uppercase tracking-wide whitespace-nowrap ${active ? 'text-violet-600' : 'text-gray-500 hover:text-gray-700'}`}
+      className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors ${active ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
     >
       {label}
       {active ? (dir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />) : null}
@@ -40,6 +41,7 @@ export default function CustomerList() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
   const PAGE_SIZE = 10;
 
@@ -90,38 +92,47 @@ export default function CustomerList() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-serif font-black text-brand-text-dark uppercase tracking-tight">Customers</h2>
-          <p className="text-brand-text-muted text-sm mt-1">Total {state.customers.length} business entities onboarded.</p>
+          <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Customers</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Manage your client database and credit terms.</p>
         </div>
-        <button 
-          onClick={() => { setEditCustomer(null); setShowForm(true); }}
-          className="btn-primary"
-        >
-          <Plus size={18} />
-          Add New Customer
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowImport(true)}
+            className="btn-ghost !h-11 px-6 text-xs"
+          >
+            <Upload size={18} />
+            Bulk Import
+          </button>
+          <button 
+            onClick={() => { setEditCustomer(null); setShowForm(true); }}
+            className="btn-primary !h-11 px-6 text-xs"
+          >
+            <Plus size={18} />
+            Add Customer
+          </button>
+        </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="premium-card p-4 flex flex-col sm:flex-row gap-4 bg-white/50 backdrop-blur-sm">
+      <div className="premium-card p-4 flex flex-col sm:flex-row gap-4 bg-white border-slate-200 shadow-sm">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-muted" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             placeholder="Search by name, GSTIN, phone, city..."
-            className="w-full pl-12 pr-4 py-3 bg-white border border-brand-border rounded-2xl text-sm focus:ring-4 focus:ring-violet-500/5 focus:border-violet-400 outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:bg-white outline-none transition-all font-medium"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        <div className="flex bg-gray-100 p-1 rounded-2xl overflow-x-auto no-scrollbar whitespace-nowrap">
+        <div className="flex bg-slate-50 p-1 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap border border-slate-200">
           {FILTER_CHIPS.map(chip => (
             <button
               key={chip}
               onClick={() => { setFilter(chip); setPage(1); }}
               className={cn(
-                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                filter === chip ? "bg-white text-violet-600 shadow-sm" : "text-brand-text-muted hover:text-brand-text-dark"
+                "px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                filter === chip ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-900"
               )}
             >
               {chip}
@@ -131,20 +142,20 @@ export default function CustomerList() {
       </div>
 
       {/* Table */}
-      <div className="premium-card overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="premium-card overflow-hidden border-slate-200">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="premium-table">
             <thead>
               <tr>
                 <th><SortBtn label="Customer Details" sortKey="legalName" current={sortKey} dir={sortDir} onClick={handleSort} /></th>
-                <th className="hidden lg:table-cell"><span className="text-xs font-black uppercase tracking-widest text-violet-600">GSTIN</span></th>
+                <th className="hidden lg:table-cell"><span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">GSTIN Identification</span></th>
                 <th className="hidden md:table-cell"><SortBtn label="Location" sortKey="city" current={sortKey} dir={sortDir} onClick={handleSort} /></th>
                 <th className="text-right"><SortBtn label="Outstanding" sortKey="outstanding" current={sortKey} dir={sortDir} onClick={handleSort} /></th>
                 <th className="text-center">Status</th>
                 <th className="w-24"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-50">
               {paginated.map((c, i) => (
                 <motion.tr 
                   key={c.id}
@@ -153,45 +164,45 @@ export default function CustomerList() {
                   transition={{ delay: i * 0.03 }}
                   className="group"
                 >
-                  <td className="py-5 px-6">
+                  <td data-label="Customer" className="py-5 px-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-violet-50 flex items-center justify-center text-xs font-black text-violet-600 shadow-inner group-hover:scale-110 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-900 transition-all group-hover:bg-slate-900 group-hover:text-white">
                         {c.legalName.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-xs font-black text-brand-text-dark uppercase tracking-tight">{c.legalName}</p>
-                        <p className="text-[10px] font-bold text-brand-text-muted mt-0.5 tracking-widest">{c.code} • {c.phone}</p>
+                        <p className="text-[13px] font-bold text-slate-900 uppercase tracking-tight">{c.legalName}</p>
+                        <p className="text-[10px] font-bold text-slate-400 mt-0.5 tracking-wider uppercase">{c.code} • {c.phone}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-5 px-6 hidden lg:table-cell">
-                    <span className="text-[11px] font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded uppercase">
-                      {c.gstin || 'No GSTIN'}
+                  <td data-label="GSTIN" className="py-5 px-6 hidden lg:table-cell">
+                    <span className="text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-lg uppercase tabular-nums">
+                      {c.gstin || 'NO-GST-REG'}
                     </span>
                   </td>
-                  <td className="py-5 px-6 hidden md:table-cell text-xs font-bold text-brand-text-dark uppercase tracking-tighter">
+                  <td data-label="Location" className="py-5 px-6 hidden md:table-cell text-xs font-bold text-slate-900 uppercase tracking-tighter">
                     {c.city}
                   </td>
-                  <td className="py-5 px-6 text-right font-serif font-black text-brand-text-dark italic">
+                  <td data-label="Outstanding" className="py-5 px-6 text-right font-bold text-slate-900 tabular-nums">
                     {formatINRCompact(c.outstanding)}
                   </td>
-                  <td className="py-5 px-6">
+                  <td data-label="Status" className="py-5 px-6">
                     <div className="flex justify-center">
                       <StatusBadge status={c.status} />
                     </div>
                   </td>
                   <td className="py-5 px-6">
-                    <div className="flex items-center justify-end gap-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-2 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => handleEdit(c)}
-                        className="p-2 text-violet-600 hover:bg-violet-50 rounded-xl transition-all"
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
                         title="Edit Customer"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => handleNewInvoice(c)}
-                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
                         title="New Invoice"
                       >
                         <FileText size={16} />
@@ -206,16 +217,15 @@ export default function CustomerList() {
           {filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="relative mb-6">
-                <div className="absolute inset-0 bg-violet-200 blur-3xl opacity-20 rounded-full scale-150 animate-pulse"></div>
-                <Users size={80} className="text-violet-200 relative z-10" />
+                <Users size={80} className="text-slate-100 relative z-10" />
               </div>
-              <h3 className="text-lg font-serif font-black text-brand-text-dark uppercase tracking-widest">No clients found</h3>
-              <p className="text-brand-text-muted text-xs mt-2 max-w-xs">We couldn&apos;t find any customers matching your current search or filters.</p>
+              <h3 className="text-lg font-bold text-slate-900 uppercase tracking-widest">No clients found</h3>
+              <p className="text-slate-400 text-xs mt-2 max-w-xs font-medium uppercase tracking-tighter">We couldn&apos;t find any customers matching your current search or filters.</p>
               <button 
                 onClick={() => { setSearch(''); setFilter('All'); }}
-                className="mt-6 text-[10px] font-black uppercase tracking-widest text-violet-600 border-b border-violet-200 pb-1 hover:border-violet-600 transition-all"
+                className="mt-8 text-[10px] font-bold uppercase tracking-widest text-slate-900 bg-slate-100 px-6 py-2.5 rounded-xl hover:bg-slate-200 transition-all"
               >
-                Reset Filters
+                Reset Search
               </button>
             </div>
           )}
@@ -223,36 +233,38 @@ export default function CustomerList() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand-text-muted">
-              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} entries
+          <div className="px-8 py-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Page {page} of {totalPages} • {filtered.length} Results
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-xl border border-gray-200 text-gray-400 disabled:opacity-30 hover:bg-white hover:text-violet-600 hover:border-violet-200 transition-all"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 disabled:opacity-30 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm"
               >
                 <ChevronUp size={16} className="-rotate-90" />
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={cn(
-                    "w-8 h-8 rounded-xl text-xs font-black transition-all",
-                    page === p 
-                      ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20" 
-                      : "text-brand-text-muted hover:bg-white hover:text-violet-600"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={cn(
+                      "w-10 h-10 rounded-xl text-xs font-bold transition-all border",
+                      page === p 
+                        ? "bg-slate-900 text-white border-slate-900 shadow-md" 
+                        : "bg-white text-slate-400 border-slate-200 hover:text-slate-900 hover:border-slate-900"
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2 rounded-xl border border-gray-200 text-gray-400 disabled:opacity-30 hover:bg-white hover:text-violet-600 hover:border-violet-200 transition-all"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 disabled:opacity-30 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm"
               >
                 <ChevronUp size={16} className="rotate-90" />
               </button>
@@ -266,6 +278,11 @@ export default function CustomerList() {
           <CustomerForm
             customer={editCustomer}
             onClose={() => { setShowForm(false); setEditCustomer(null); }}
+          />
+        )}
+        {showImport && (
+          <ImportCustomersModal
+            onClose={() => setShowImport(false)}
           />
         )}
       </AnimatePresence>

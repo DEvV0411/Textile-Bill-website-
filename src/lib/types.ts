@@ -127,6 +127,8 @@ export interface Invoice {
   total: number;
   status: InvoiceStatus;
   irn: string | null;
+  ewayBillNo: string | null;
+  dispatchDate: string | null;
   terms: string;
   transporter: string;
   vehicleNo: string;
@@ -181,4 +183,5 @@ export type AppAction =
   | { type: 'SET_RECENT_CUSTOMER'; payload: string }
   | { type: 'INCREMENT_INVOICE_COUNTER' }
   | { type: 'LOGIN' }
-  | { type: 'LOGOUT' };
+  | { type: 'LOGOUT' }
+  | { type: 'BULK_ADD_CUSTOMERS'; payload: Customer[] };

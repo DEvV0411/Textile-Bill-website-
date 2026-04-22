@@ -42,39 +42,36 @@ interface KPICardProps {
   delay?: number;
 }
 
-function KPICard({ title, value, prefix = '', suffix = '', icon, gradient, change, compact, delay = 0 }: KPICardProps) {
+function KPICard({ title, value, prefix = '', suffix = '', icon, change, compact, delay = 0 }: KPICardProps) {
   const displayValue = useCountUp(value);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: 'easeOut' }}
-      className="premium-card p-6 group cursor-pointer relative overflow-hidden"
+      transition={{ delay, duration: 0.3 }}
+      className="premium-card p-6 group cursor-pointer border-slate-200"
     >
-      {/* Decorative Blob */}
-      <div className={cn("absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500", gradient)} />
-      
-      <div className="flex items-start justify-between relative z-10">
+      <div className="flex items-start justify-between">
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg", gradient)}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-50 text-slate-900 border border-slate-100 shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all">
               {icon}
             </div>
-            <span className="text-[11px] font-black uppercase tracking-widest text-brand-text-muted">{title}</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">{title}</span>
           </div>
           
           <div>
-            <h3 className="text-3xl font-serif font-black text-brand-text-dark tabular-nums flex items-baseline gap-1">
-              <span className="text-violet-600/40 text-xl font-bold">{prefix}</span>
+            <h3 className="text-3xl font-bold text-slate-900 tabular-nums flex items-baseline gap-1">
+              <span className="text-slate-400 text-xl font-bold">{prefix}</span>
               {compact ? formatINRCompact(displayValue).replace('₹', '') : displayValue.toLocaleString('en-IN')}
-              <span className="text-sm font-bold text-brand-text-muted">{suffix}</span>
+              <span className="text-sm font-bold text-slate-400">{suffix}</span>
             </h3>
             
             {change !== undefined && (
               <div className={cn(
-                "flex items-center gap-1 mt-2 text-[10px] font-black uppercase tracking-tighter",
-                change >= 0 ? "text-emerald-500" : "text-red-500"
+                "flex items-center gap-1 mt-2 text-[10px] font-bold uppercase tracking-tighter",
+                change >= 0 ? "text-emerald-600" : "text-rose-600"
               )}>
                 {change >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                 <span>{Math.abs(change)}% vs last month</span>
@@ -93,18 +90,18 @@ function RecentActivity() {
   const recent = state.invoices.slice(-6).reverse();
 
   return (
-    <div className="premium-card overflow-hidden">
-      <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-violet-50/30">
-        <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text-dark">Recent Invoices</h3>
-        <button onClick={() => navigate('invoice')} className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-700 transition-colors">
+    <div className="premium-card overflow-hidden border-slate-200 shadow-sm">
+      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-900">Recent Invoices</h3>
+        <button onClick={() => navigate('invoice')} className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
           View All →
         </button>
       </div>
       
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-slate-50">
         {recent.length === 0 ? (
-          <div className="text-center py-16 text-brand-text-muted">
-            <FileText size={40} className="mx-auto mb-4 opacity-10" />
+          <div className="text-center py-20 text-slate-400">
+            <FileText size={40} className="mx-auto mb-4 opacity-20" />
             <p className="text-xs font-bold uppercase tracking-widest">No activity found</p>
           </div>
         ) : (
@@ -114,17 +111,17 @@ function RecentActivity() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.05 }}
-              className="flex items-center gap-4 p-5 hover:bg-gray-50/80 transition-all cursor-pointer group"
+              className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-all cursor-pointer group"
             >
-              <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-all">
                 <FileText size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-brand-text-dark uppercase tracking-tight truncate">{inv.number}</p>
-                <p className="text-[10px] font-bold text-brand-text-muted mt-0.5 truncate uppercase tracking-tighter">{inv.customerName}</p>
+                <p className="text-xs font-bold text-slate-900 uppercase tracking-tight truncate">{inv.number}</p>
+                <p className="text-[10px] font-medium text-slate-500 mt-0.5 truncate uppercase tracking-tighter">{inv.customerName}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-serif font-black text-brand-text-dark italic">{formatINRCompact(inv.total)}</p>
+                <p className="text-sm font-bold text-slate-900 italic">{formatINRCompact(inv.total)}</p>
                 <div className="mt-1">
                   <StatusBadge status={inv.status} small />
                 </div>
@@ -140,22 +137,21 @@ function RecentActivity() {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 export function StatusBadge({ status, small }: { status: string; small?: boolean }) {
   const map: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-500',
-    ISSUED: 'bg-violet-100 text-violet-600',
-    PAID: 'bg-emerald-100 text-emerald-600',
-    'PART-PAID': 'bg-amber-100 text-amber-600',
-    CANCELLED: 'bg-red-100 text-red-500',
-    Active: 'bg-emerald-100 text-emerald-600',
-    Inactive: 'bg-gray-100 text-gray-500',
-    Overdue: 'bg-red-100 text-red-600',
+    DRAFT: 'border-slate-200 bg-slate-50 text-slate-500',
+    ISSUED: 'border-blue-200 bg-blue-50 text-blue-600',
+    PAID: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+    'PART-PAID': 'border-amber-200 bg-amber-50 text-amber-600',
+    CANCELLED: 'border-rose-200 bg-rose-50 text-rose-500',
+    Active: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+    Inactive: 'border-slate-200 bg-slate-50 text-slate-500',
+    Overdue: 'border-rose-200 bg-rose-50 text-rose-600',
   };
   return (
     <span className={cn(
-      "status-badge inline-flex",
-      small ? "px-2 py-0.5 text-[9px]" : "px-3 py-1 text-[11px]",
-      map[status] || 'bg-gray-100 text-gray-600'
+      "status-badge inline-flex border",
+      small ? "px-2 py-0.5 text-[9px] rounded" : "px-3 py-1 text-[11px] rounded-md",
+      map[status] || 'bg-slate-50 text-slate-600'
     )}>
-      <div className={cn("w-1 h-1 rounded-full", map[status]?.split(' ')[1].replace('text-', 'bg-'))} />
       {status}
     </span>
   );
@@ -171,17 +167,17 @@ function QuickStats() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
       {[
-        { label: 'Total Customers', value: totalCustomers, icon: <Users size={16} />, color: 'bg-violet-50 text-violet-600' },
-        { label: 'Overdue Accounts', value: overdueCount, icon: <Clock size={16} />, color: 'bg-red-50 text-red-500' },
-        { label: 'Low Stock Items', value: lowStockCount, icon: <ShoppingBag size={16} />, color: 'bg-amber-50 text-amber-500' },
+        { label: 'Total Customers', value: totalCustomers, icon: <Users size={16} />, color: 'bg-slate-100 text-slate-900' },
+        { label: 'Overdue Accounts', value: overdueCount, icon: <Clock size={16} />, color: 'bg-rose-50 text-rose-600' },
+        { label: 'Low Stock Items', value: lowStockCount, icon: <ShoppingBag size={16} />, color: 'bg-amber-50 text-amber-600' },
       ].map((s, i) => (
-        <div key={i} className="premium-card p-5 flex items-center gap-4">
-          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm", s.color)}>
+        <div key={i} className="premium-card p-5 flex items-center gap-4 border-slate-200 shadow-sm">
+          <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border border-slate-100", s.color)}>
             {s.icon}
           </div>
           <div>
-            <p className="text-2xl font-serif font-black text-brand-text-dark">{s.value}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest text-brand-text-muted mt-0.5">{s.label}</p>
+            <p className="text-2xl font-bold text-slate-900 tabular-nums">{s.value}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">{s.label}</p>
           </div>
         </div>
       ))}
@@ -204,16 +200,16 @@ export default function Dashboard() {
   ).length;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 pb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="text-center sm:text-left">
-          <h2 className="text-2xl sm:text-3xl font-serif font-black text-brand-text-dark">Overview</h2>
-          <p className="text-brand-text-muted text-xs sm:text-sm mt-1">Quick summary of your textile business performance.</p>
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Real-time summary of textile business metrics.</p>
         </div>
-        <div className="flex items-center justify-center sm:justify-start gap-2 bg-white px-4 py-2 rounded-2xl border border-brand-border shadow-sm self-center sm:self-auto">
-          <Calendar size={14} className="text-violet-500" />
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-brand-text-dark">Today, {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+        <div className="flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl border border-slate-200 shadow-sm">
+          <Calendar size={14} className="text-slate-400" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-900">Today, {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
       </div>
 
@@ -224,7 +220,7 @@ export default function Dashboard() {
           value={todaySales}
           prefix="₹"
           icon={<IndianRupee size={18} />}
-          gradient="bg-gradient-to-r from-violet-500 to-purple-600"
+          gradient=""
           change={12}
           compact
           delay={0}
@@ -234,7 +230,7 @@ export default function Dashboard() {
           value={totalOutstanding}
           prefix="₹"
           icon={<IndianRupee size={18} />}
-          gradient="bg-gradient-to-r from-amber-500 to-orange-500"
+          gradient=""
           change={-5}
           compact
           delay={0.1}
@@ -243,7 +239,7 @@ export default function Dashboard() {
           title="Invoices Today"
           value={invoicesToday}
           icon={<FileText size={18} />}
-          gradient="bg-gradient-to-r from-indigo-500 to-blue-600"
+          gradient=""
           change={8}
           delay={0.2}
         />
@@ -251,7 +247,7 @@ export default function Dashboard() {
           title="Overdue Items"
           value={state.customers.filter(c => c.status === 'Overdue').length}
           icon={<Clock size={18} />}
-          gradient="bg-gradient-to-r from-red-500 to-rose-600"
+          gradient=""
           change={2}
           delay={0.3}
         />
@@ -268,9 +264,9 @@ export default function Dashboard() {
 
         <div className="lg:col-span-5 space-y-8">
           {/* Top Debtors */}
-          <div className="premium-card p-6">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-text-dark mb-6 flex items-center gap-2">
-              <div className="w-1 h-4 bg-amber-500 rounded-full" />
+          <div className="premium-card p-6 border-slate-200 shadow-sm">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-900 mb-8 flex items-center gap-2">
+              <div className="w-1 h-4 bg-slate-900 rounded-full" />
               Top Debtors
             </h3>
             
@@ -281,24 +277,24 @@ export default function Dashboard() {
                 .slice(0, 5)
                 .map((c) => (
                   <div key={c.id} className="flex items-center gap-4 group">
-                    <div className="w-9 h-9 rounded-full bg-brand-main flex items-center justify-center text-[11px] font-black text-brand-text-muted group-hover:bg-violet-100 group-hover:text-violet-600 transition-colors uppercase">
+                    <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-[11px] font-bold text-slate-500 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all uppercase">
                       {c.legalName.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-brand-text-dark truncate uppercase tracking-tight">{c.legalName}</p>
-                      <p className="text-[9px] font-bold text-brand-text-muted mt-0.5 uppercase tracking-widest">{c.city}</p>
+                      <p className="text-xs font-bold text-slate-900 truncate uppercase tracking-tight">{c.legalName}</p>
+                      <p className="text-[9px] font-medium text-slate-500 mt-0.5 uppercase tracking-widest">{c.city}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-serif font-black text-brand-text-dark italic">{formatINRCompact(c.outstanding)}</p>
+                      <p className="text-sm font-bold text-slate-900 italic">{formatINRCompact(c.outstanding)}</p>
                     </div>
                   </div>
                 ))}
               {state.customers.filter(c => c.outstanding > 0).length === 0 && (
-                <div className="text-center py-10 italic text-brand-text-muted text-xs">No pending dues</div>
+                <div className="text-center py-10 italic text-slate-400 text-xs">No pending dues</div>
               )}
             </div>
             
-            <button className="w-full mt-8 py-3 rounded-2xl border border-violet-100 text-violet-600 text-[10px] font-black uppercase tracking-widest hover:bg-violet-50 transition-all">
+            <button className="w-full mt-10 h-11 rounded-xl border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50 transition-all">
               Full Statement →
             </button>
           </div>

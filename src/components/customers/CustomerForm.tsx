@@ -26,11 +26,11 @@ interface CustomerFormProps {
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <label className="block text-[11px] font-black text-brand-text-muted uppercase tracking-widest ml-1">{label}</label>
+      <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">{label}</label>
       {children}
       {error && (
         <motion.p initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }}
-          className="text-[10px] font-bold text-red-500 flex items-center gap-1 mt-1 ml-1">
+          className="text-[10px] font-bold text-rose-500 flex items-center gap-1 mt-1 ml-1">
           <AlertCircle size={12} /> {error}
         </motion.p>
       )}
@@ -45,7 +45,7 @@ function Input({ value, onChange, placeholder, className, type = "text" }: { val
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      className={`w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-violet-500/5 focus:border-violet-400 focus:bg-white outline-none transition-all ${className}`}
+      className={`w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:border-slate-900 focus:bg-white outline-none transition-all font-medium ${className}`}
     />
   );
 }
@@ -56,11 +56,11 @@ function Select({ value, options, onChange }: { value: string; options: string[]
       <select 
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-violet-500/5 focus:border-violet-400 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
+        className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:border-slate-900 focus:bg-white outline-none transition-all appearance-none cursor-pointer font-medium"
       >
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
         <ArrowRight size={14} className="rotate-90" />
       </div>
     </div>
@@ -101,7 +101,7 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
     if (validate()) {
       if (customer?.id) dispatch({ type: 'UPDATE_CUSTOMER', payload: form });
       else dispatch({ type: 'ADD_CUSTOMER', payload: { ...form, id: generateId() } });
-      toast.success(customer?.id ? 'Customer updated! 🚀' : 'New customer added! ✨');
+      toast.success(customer?.id ? 'Customer updated!' : 'New customer added!');
       onClose();
     } else {
       setActiveTab('details'); // Switch to details to show errors
@@ -124,7 +124,7 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-brand-sidebar/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
       />
       
       <div className="absolute inset-y-0 right-0 max-w-full flex">
@@ -136,27 +136,27 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
           className="w-screen max-w-[560px] bg-white shadow-2xl flex flex-col"
         >
           {/* Header */}
-          <div className="px-8 py-7 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+          <div className="px-8 py-7 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-500/20">
+              <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg">
                 <User size={24} />
               </div>
               <div>
-                <h2 className="text-xl font-serif font-black text-brand-text-dark uppercase tracking-tight">
-                  {customer?.id ? 'Edit Entity' : 'New Entity'}
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight uppercase">
+                  {customer?.id ? 'Edit Client' : 'New Client'}
                 </h2>
-                <p className="text-[10px] font-black text-brand-text-muted uppercase tracking-widest mt-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                   {form.code || 'Drafting Mode'}
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
-              <X size={28} />
+            <button onClick={onClose} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+              <X size={24} />
             </button>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="px-8 flex border-b border-gray-100 bg-gray-50/30">
+          <div className="px-8 flex border-b border-slate-100 bg-slate-50/50 overflow-x-auto no-scrollbar whitespace-nowrap">
             {[
               { id: 'details', label: 'Basic Info', icon: <Briefcase size={14} /> },
               { id: 'legal', label: 'GST & Legal', icon: <ShieldCheck size={14} /> },
@@ -166,14 +166,14 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 px-4 py-5 text-[10px] font-black uppercase tracking-widest transition-all relative ${
-                  activeTab === tab.id ? "text-violet-600" : "text-brand-text-muted hover:text-brand-text-dark"
+                className={`flex items-center gap-2 px-4 py-5 text-[10px] font-bold uppercase tracking-widest transition-all relative inline-flex ${
+                  activeTab === tab.id ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
                 {tab.icon}
                 {tab.label}
                 {activeTab === tab.id && (
-                  <motion.div layoutId="formTab" className="absolute bottom-0 left-0 right-0 h-1 bg-violet-600 rounded-t-full" />
+                  <motion.div layoutId="formTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900" />
                 )}
               </button>
             ))}
@@ -230,8 +230,8 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
                   <Field label="Registration Type">
                     <Select value={form.regType} options={['Regular', 'Composition', 'Unregistered', 'SEZ']} onChange={v => set('regType', v as RegType)} />
                   </Field>
-                  <div className="sm:col-span-2 p-6 bg-amber-50 rounded-3xl border border-amber-100 space-y-4">
-                    <div className="flex items-center gap-2 text-amber-700 font-bold text-xs uppercase tracking-widest">
+                  <div className="sm:col-span-2 p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                    <div className="flex items-center gap-2 text-slate-700 font-bold text-xs uppercase tracking-widest">
                       <CreditCard size={16} /> Credit Configuration
                     </div>
                     <div className="grid grid-cols-2 gap-6">
@@ -252,17 +252,17 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
                     <div key={addr.id} className="premium-card p-6 group">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                          <MapPin size={16} className="text-violet-600" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-muted">Billing Location</span>
+                          <MapPin size={16} className="text-slate-400" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Billing Location</span>
                         </div>
                         <button onClick={() => {
                           const list = [...form.billingAddresses];
                           list.splice(idx, 1);
                           set('billingAddresses', list);
-                        }} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                        }} className="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
                       </div>
-                      <p className="text-xs font-bold text-brand-text-dark">{addr.line1}</p>
-                      <p className="text-[10px] font-bold text-brand-text-muted mt-1 uppercase tracking-tighter">{addr.city}, {addr.state} - {addr.pinCode}</p>
+                      <p className="text-xs font-bold text-slate-900">{addr.line1}</p>
+                      <p className="text-[10px] font-medium text-slate-500 mt-1 uppercase tracking-tighter">{addr.city}, {addr.state} - {addr.pinCode}</p>
                     </div>
                   ))}
                   <button 
@@ -270,7 +270,7 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
                       const addr = { id: generateId(), line1: '', line2: '', city: '', state: 'Gujarat', pinCode: '', label: 'Office' as const };
                       set('billingAddresses', [...form.billingAddresses, addr]);
                     }}
-                    className="w-full py-5 border-2 border-dashed border-violet-100 rounded-3xl flex items-center justify-center gap-2 text-violet-600 text-xs font-black uppercase tracking-widest hover:bg-violet-50 transition-all"
+                    className="w-full py-5 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-widest hover:bg-slate-50 transition-all"
                   >
                     <Plus size={18} /> Add New Location
                   </button>
@@ -282,27 +282,27 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
                   {form.contacts.map((contact, idx) => (
                     <div key={contact.id} className="premium-card p-6 group">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2 text-violet-600">
+                        <div className="flex items-center gap-2 text-slate-400">
                           <User size={16} />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-brand-text-muted">Contact Person</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Contact Person</span>
                         </div>
                         <button onClick={() => {
                           const list = [...form.contacts];
                           list.splice(idx, 1);
                           set('contacts', list);
-                        }} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                        }} className="text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
                       </div>
-                      <h4 className="text-sm font-black text-brand-text-dark uppercase">{contact.name}</h4>
-                      <p className="text-[10px] font-bold text-brand-text-muted mt-1">{contact.role || 'Partner'}</p>
+                      <h4 className="text-sm font-bold text-slate-900 uppercase">{contact.name}</h4>
+                      <p className="text-[10px] font-medium text-slate-500 mt-1">{contact.role || 'Partner'}</p>
                       <div className="flex items-center gap-4 mt-4">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-violet-600"><Phone size={12} /> {contact.phone}</div>
-                        {contact.email && <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400"><Mail size={12} /> {contact.email}</div>}
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900"><Phone size={12} /> {contact.phone}</div>
+                        {contact.email && <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400"><Mail size={12} /> {contact.email}</div>}
                       </div>
                     </div>
                   ))}
                   <button 
                     onClick={() => set('contacts', [...form.contacts, { id: generateId(), name: 'New Contact', role: '', phone: '', email: '', whatsapp: true }])}
-                    className="w-full py-5 border-2 border-dashed border-violet-100 rounded-3xl flex items-center justify-center gap-2 text-violet-600 text-xs font-black uppercase tracking-widest hover:bg-violet-50 transition-all"
+                    className="w-full py-5 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-widest hover:bg-slate-50 transition-all"
                   >
                     <Plus size={18} /> Add Contact Representative
                   </button>
@@ -312,11 +312,11 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
           </div>
 
           {/* Sticky Footer */}
-          <div className="p-8 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-            <button onClick={onClose} className="text-[10px] font-black uppercase tracking-widest text-brand-text-muted hover:text-brand-text-dark">Discard Changes</button>
-            <button onClick={handleSave} className="btn-primary min-w-[200px]">
+          <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <button onClick={onClose} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900">Discard Changes</button>
+            <button onClick={handleSave} className="btn-primary min-w-[200px] !h-11 text-sm">
               <Save size={18} />
-              Commit Changes
+              Save Client
             </button>
           </div>
         </motion.div>
