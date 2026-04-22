@@ -155,7 +155,7 @@
 }
 
 /* 📱 Mobile Specific Resets */
-@media (max-width: 640px) {
+@media (max-width: 1023px) {
   .premium-card {
     border-radius: 20px;
     padding: 1rem !important;
@@ -182,12 +182,12 @@
 
   .premium-table tbody td {
     display: flex;
-    justify-content: justify-between;
+    justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0 !important;
-    border: none !important;
+    padding: 0.8rem 1rem !important;
+    border-bottom: 1px solid #F8FAFC !important;
     width: 100% !important;
-    text-align: left !important;
+    text-align: right !important;
   }
 
   .premium-table tbody td::before {

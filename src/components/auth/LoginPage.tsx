@@ -18,11 +18,14 @@ export default function LoginPage() {
     setLoading(true);
 
     setTimeout(() => {
-      if (username === 'admin' && password === 'admin') {
+      const u = username.trim().toLowerCase();
+      const p = password.trim();
+      
+      if (u === 'admin' && p === 'admin') {
         dispatch({ type: 'LOGIN' });
         toast.success('Access Granted. Welcome, Admin.');
       } else {
-        toast.error('Identity Verification Failed');
+        toast.error('Identity Verification Failed. Check ID/Key.');
         setLoading(false);
       }
     }, 1500);
@@ -96,7 +99,7 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SIDE: Login Form */}
-      <div className="w-full lg:w-[40%] flex flex-col justify-center p-8 lg:p-24 bg-slate-50 relative">
+      <div className="w-full lg:w-[40%] flex flex-col justify-center p-6 sm:p-10 lg:p-24 bg-slate-50 relative">
         <div className="lg:hidden absolute top-8 left-8 flex items-center gap-3">
            <Zap size={20} className="text-slate-900" />
            <span className="text-slate-900 font-black uppercase tracking-tighter">Textile Portal</span>
@@ -154,12 +157,22 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between py-2">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
                <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" className="w-4 h-4 rounded-md border-2 border-slate-200 text-slate-900 focus:ring-0 cursor-pointer" />
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">Remember Node</span>
                </label>
-               <button type="button" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">Emergency Reset</button>
+               <button 
+                  type="button"
+                  onClick={() => {
+                    setUsername('admin');
+                    setPassword('admin');
+                    toast.success('Credentials Autofilled');
+                  }}
+                  className="text-[10px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition-all border border-blue-100"
+               >
+                  One-Tap Demo Login
+               </button>
             </div>
 
             <button

@@ -162,9 +162,9 @@ export default function CustomerList() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="group"
+                  className="group hover:bg-slate-50/50 transition-all cursor-pointer"
                 >
-                  <td data-label="Customer" className="py-5 px-6">
+                  <td data-label="Entity" className="py-5 px-6">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-900 transition-all group-hover:bg-slate-900 group-hover:text-white">
                         {c.legalName.charAt(0)}
