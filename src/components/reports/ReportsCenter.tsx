@@ -1,16 +1,22 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, Users, ArrowUpRight, 
   ArrowDownRight, Calendar, Download, Filter
 } from 'lucide-react';
 import { useApp } from '@/lib/store';
-import { formatINR, formatINRCompact, formatDate } from '@/lib/utils';
+import { formatINR, formatINRCompact, formatDate, cn } from '@/lib/utils';
 
 export default function ReportsCenter() {
   const { state } = useApp();
+  const [activeTab, setActiveTab] = useState<'overview' | 'sales' | 'customers' | 'inventory'>('overview');
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
 
   // ─── Metrics ───────────────────────────────────────────────────────────────
   const metrics = useMemo(() => {
@@ -57,7 +63,7 @@ export default function ReportsCenter() {
   }, [state.invoices]);
 
   return (
-    <div className="space-y-8 pb-10">
+    <div ref={scrollRef} className="space-y-8 pb-10 overflow-y-auto h-full no-scrollbar">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -189,7 +195,7 @@ export default function ReportsCenter() {
             <Filter size={16} className="text-slate-400" />
           </button>
         </div>
-        <div className="overflow-x-auto no-scrollbar">
+        <div ref={scrollRef} className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left">
             <thead className="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
               <tr>

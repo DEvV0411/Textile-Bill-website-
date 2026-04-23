@@ -338,44 +338,40 @@ export default function InvoiceCreation() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col">
-                <table className="premium-table border-b border-slate-100">
-                  <thead>
-                    <tr>
-                      <th className="w-12">#</th>
-                      <th>Product / SKU Details</th>
-                      <th className="text-center w-24">Qty (M)</th>
-                      <th className="text-center w-20">Qty (P)</th>
-                      <th className="text-right w-28">Rate</th>
-                      <th className="text-right w-32">Total</th>
-                      <th className="w-12"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
+              <div className="p-6">
+                <div className="border border-slate-200 rounded-3xl overflow-hidden bg-white shadow-sm mb-6">
+                  <table className="premium-table">
+                    <thead>
+                      <tr>
+                        <th>S.No</th>
+                        <th>Product Details</th>
+                        <th className="text-center">Primary (Mtr)</th>
+                        <th className="text-center sm:table-cell hidden">Secondary (Pcs)</th>
+                        <th className="text-right">Rate</th>
+                        <th className="text-right">Subtotal</th>
+                        <th className="w-16"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
                     {lines.map((line, idx) => (
-                      <tr key={line.id} className="group">
-                        <td data-label="Item" className="py-4 px-6 text-[10px] font-bold text-slate-300">{idx + 1}</td>
-                        <td data-label="Product" className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                              {line.name.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-slate-900 uppercase truncate max-w-[180px]">{line.name}</p>
-                              <p className="text-[10px] font-medium text-slate-400 mt-0.5 tracking-tighter uppercase">{line.variant} • HSN {line.hsn}</p>
-                            </div>
-                          </div>
+                      <tr key={line.id} className="group transition-all">
+                        <td data-label="S.No" className="py-4 px-6 text-xs font-bold text-slate-400 tabular-nums">
+                          {idx + 1}
                         </td>
-                        <td data-label="Quantity (M)" className="py-4 px-6 text-center tabular-nums">
+                        <td data-label="Product" className="py-4 px-6">
+                          <p className="text-xs font-bold text-slate-900 uppercase tracking-tight">{line.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">HSN: {line.hsn}</p>
+                        </td>
+                        <td data-label="Primary" className="py-4 px-6 text-center tabular-nums">
                           <input 
                             type="number"
                             value={line.qtyPrimary || ''}
                             onChange={(e) => updateLine(line.id, { qtyPrimary: Number(e.target.value) })}
-                            className="w-16 bg-transparent text-center text-xs font-bold text-slate-900 outline-none focus:bg-slate-50 rounded p-1 transition-all"
-                            placeholder="0"
+                            className="w-20 bg-transparent text-center text-xs font-bold text-slate-900 outline-none focus:bg-slate-50 rounded p-1 transition-all"
+                            placeholder="0.00"
                           />
                         </td>
-                        <td data-label="Quantity (P)" className="py-4 px-6 text-center tabular-nums">
+                        <td data-label="Secondary" className="py-4 px-6 text-center tabular-nums sm:table-cell hidden">
                           <input 
                             type="number"
                             value={line.qtySecondary || ''}
@@ -386,7 +382,7 @@ export default function InvoiceCreation() {
                         </td>
                         <td data-label="Rate" className="py-4 px-6 text-right tabular-nums">
                           <div className="flex items-center justify-end gap-1">
-                            <span className="text-[10px] text-slate-300 sm:inline hidden">₹</span>
+                            <span className="text-[10px] text-slate-300">₹</span>
                             <input 
                               type="number"
                               value={line.rate || ''}
@@ -397,22 +393,25 @@ export default function InvoiceCreation() {
                           </div>
                         </td>
                         <td data-label="Subtotal" className="py-4 px-6 text-right tabular-nums text-xs font-bold text-slate-900 italic">
-                          ₹{line.lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          {formatINR(line.lineTotal)}
                         </td>
-                        <td className="py-4 px-6 flex justify-end">
-                          <button 
-                            onClick={() => setLines(lines.filter(l => l.id !== line.id))}
-                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all lg:opacity-0 group-hover:opacity-100"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                        <td className="py-4 px-6">
+                          <div className="flex justify-end">
+                            <button 
+                              onClick={() => setLines(lines.filter(l => l.id !== line.id))}
+                              className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all lg:opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
                 
-                {/* Tax & Calculation Breakdown */}
+              {/* Tax & Calculation Breakdown */}
                 <div className="p-6 bg-slate-50/30 flex justify-between gap-8 border-b border-slate-100">
                   <div className="flex-1">
                     <button 

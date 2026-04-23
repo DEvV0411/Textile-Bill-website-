@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Building2, CreditCard, Bell, Shield, 
@@ -19,7 +19,12 @@ const SECTIONS = [
 
 export default function SettingsPortal() {
   const [activeSection, setActiveSection] = useState('business');
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeSection]);
 
   const handleSave = () => {
     setSaving(true);
@@ -30,7 +35,7 @@ export default function SettingsPortal() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 pb-10">
+    <div ref={scrollRef} className="flex flex-col lg:flex-row gap-8 pb-10">
       {/* Sidebar Nav */}
       <div className="lg:w-64 flex-shrink-0">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-24">
@@ -76,9 +81,11 @@ export default function SettingsPortal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="sm:col-span-2 flex flex-col sm:flex-row items-center gap-8 p-8 bg-slate-50 border border-slate-200 rounded-2xl">
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-white hover:border-slate-900 transition-all group shadow-sm">
-                      <Plus size={24} />
-                      <span className="text-[10px] font-bold uppercase mt-2">Brand Logo</span>
+                    <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 flex flex-col items-center justify-center overflow-hidden p-2 shadow-sm group-hover:border-slate-900 transition-all">
+                      <img src="/images/logo.png" alt="Current Logo" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center shadow-lg border-2 border-white cursor-pointer hover:bg-black transition-all">
+                      <Plus size={16} />
                     </div>
                   </div>
                   <div>
@@ -88,16 +95,16 @@ export default function SettingsPortal() {
                 </div>
 
                 <Field label="Legal Entity Name">
-                  <Input defaultValue="Rathi Textiles Pvt Ltd" />
+                  <Input defaultValue="SidZsol Technologies" />
                 </Field>
                 <Field label="Trade Name / Brand">
-                  <Input defaultValue="Rathi Fabrics" />
+                  <Input defaultValue="SidZsol" />
                 </Field>
                 <div className="sm:col-span-2">
                   <Field label="Registered Office Address">
                     <textarea 
                       className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white outline-none h-28 resize-none transition-all uppercase"
-                      defaultValue="12, Ring Road, Textile Market, Surat, Gujarat - 395003"
+                      defaultValue="Level 5, Textile Innovation Park, Hazira Road, Surat, Gujarat - 395010"
                     />
                   </Field>
                 </div>
@@ -115,10 +122,10 @@ export default function SettingsPortal() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <Field label="GSTIN (Primary)">
-                  <Input defaultValue="24AABCR1234A1Z5" className="font-mono uppercase" />
+                  <Input defaultValue="24SIDZS1234Z1Z5" className="font-mono uppercase" />
                 </Field>
                 <Field label="PAN (Corporate)">
-                  <Input defaultValue="AABCR1234A" className="font-mono uppercase" />
+                  <Input defaultValue="SIDZS1234Z" className="font-mono uppercase" />
                 </Field>
                 <Field label="LUT Number (For Exports)">
                   <Input placeholder="Enter LUT number if applicable" className="uppercase" />

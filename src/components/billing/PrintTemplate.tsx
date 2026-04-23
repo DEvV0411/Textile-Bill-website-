@@ -15,17 +15,21 @@ export default function PrintTemplate({ invoice, customer }: PrintTemplateProps)
   return (
     <div id="invoice-print-template" className="hidden print:block p-10 bg-white text-black font-serif">
       {/* Header */}
-      <div className="flex justify-between items-start border-b-2 border-black pb-8">
-        <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter">Tax Invoice</h1>
-          <p className="text-xs mt-1 font-bold">Original for Recipient</p>
+      <div className="flex justify-between items-center border-b-2 border-black pb-8">
+        <div className="flex items-center gap-6">
+          <img src="/images/logo.png" alt="SidZsol" className="h-16 w-auto" />
+          <div className="h-16 w-[2px] bg-black" />
+          <div>
+            <h1 className="text-3xl font-black uppercase tracking-tighter">Tax Invoice</h1>
+            <p className="text-xs mt-1 font-bold">Original for Recipient</p>
+          </div>
         </div>
         <div className="text-right">
-          <h2 className="text-xl font-black uppercase">Rathi Textiles Pvt Ltd</h2>
+          <h2 className="text-xl font-black uppercase">SidZsol Technologies</h2>
           <p className="text-[10px] leading-tight">
-            12, Ring Road, Textile Market,<br />
-            Surat, Gujarat - 395003<br />
-            GSTIN: <span className="font-bold">24AABCR1234A1Z5</span><br />
+            Level 5, Textile Innovation Park,<br />
+            Hazira Road, Surat, Gujarat - 395010<br />
+            GSTIN: <span className="font-bold">24SIDZS1234Z1Z5</span><br />
             State: Gujarat (24)
           </p>
         </div>
@@ -171,7 +175,7 @@ export default function PrintTemplate({ invoice, customer }: PrintTemplateProps)
           </p>
         </div>
         <div className="text-center pt-10">
-          <p className="text-[10px] font-bold uppercase mb-12">For Rathi Textiles Pvt Ltd</p>
+          <p className="text-[10px] font-bold uppercase mb-12">For SidZsol Technologies</p>
           <div className="w-40 h-px bg-black mx-auto mb-2" />
           <p className="text-[10px] font-bold uppercase">Authorized Signatory</p>
         </div>

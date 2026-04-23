@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, ChevronUp, ChevronDown, Edit2, FileText, Users, Upload } from 'lucide-react';
 import { useApp } from '@/lib/store';
@@ -14,8 +14,6 @@ type FilterChip = 'All' | 'Overdue' | 'Active' | 'Inactive';
 type SortKey = 'code' | 'legalName' | 'city' | 'outstanding' | 'lastTransaction';
 type SortDir = 'asc' | 'desc';
 
-
-// ─── Sort Button ──────────────────────────────────────────────────────────────
 function SortBtn({ label, sortKey, current, dir, onClick }: {
   label: string; sortKey: SortKey; current: SortKey; dir: SortDir;
   onClick: (k: SortKey) => void;
@@ -32,7 +30,6 @@ function SortBtn({ label, sortKey, current, dir, onClick }: {
   );
 }
 
-// ─── Main Customer List ───────────────────────────────────────────────────────
 export default function CustomerList() {
   const { state, navigate, dispatch } = useApp();
   const [search, setSearch] = useState('');
@@ -98,7 +95,7 @@ export default function CustomerList() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowImport(true)}
-            className="btn-ghost !h-11 px-6 text-xs"
+            className="btn-ghost !h-11 px-6 text-xs border border-slate-200"
           >
             <Upload size={18} />
             Bulk Import
@@ -141,7 +138,6 @@ export default function CustomerList() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="premium-card overflow-hidden border-slate-200">
         <div className="overflow-x-auto no-scrollbar">
           <table className="premium-table">
@@ -196,14 +192,12 @@ export default function CustomerList() {
                       <button 
                         onClick={() => handleEdit(c)}
                         className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                        title="Edit Customer"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => handleNewInvoice(c)}
                         className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
-                        title="New Invoice"
                       >
                         <FileText size={16} />
                       </button>
@@ -213,58 +207,25 @@ export default function CustomerList() {
               ))}
             </tbody>
           </table>
-          
-          {filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="relative mb-6">
-                <Users size={80} className="text-slate-100 relative z-10" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 uppercase tracking-widest">No clients found</h3>
-              <p className="text-slate-400 text-xs mt-2 max-w-xs font-medium uppercase tracking-tighter">We couldn&apos;t find any customers matching your current search or filters.</p>
-              <button 
-                onClick={() => { setSearch(''); setFilter('All'); }}
-                className="mt-8 text-[10px] font-bold uppercase tracking-widest text-slate-900 bg-slate-100 px-6 py-2.5 rounded-xl hover:bg-slate-200 transition-all"
-              >
-                Reset Search
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="px-8 py-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Page {page} of {totalPages} • {filtered.length} Results
+              Page {page} of {totalPages}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 disabled:opacity-30 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 disabled:opacity-30 shadow-sm"
               >
                 <ChevronUp size={16} className="-rotate-90" />
               </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={cn(
-                      "w-10 h-10 rounded-xl text-xs font-bold transition-all border",
-                      page === p 
-                        ? "bg-slate-900 text-white border-slate-900 shadow-md" 
-                        : "bg-white text-slate-400 border-slate-200 hover:text-slate-900 hover:border-slate-900"
-                    )}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 disabled:opacity-30 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-400 disabled:opacity-30 shadow-sm"
               >
                 <ChevronUp size={16} className="rotate-90" />
               </button>

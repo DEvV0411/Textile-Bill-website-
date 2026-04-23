@@ -39,8 +39,8 @@ function SidebarContent({ state, navigate, dispatch, onCloseMobile }: {
       {/* Logo */}
       <div className="flex items-center gap-4 px-7 py-8 border-b border-slate-100">
         <div className="relative group">
-          <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-            <Zap size={22} className="text-white fill-white/20" />
+          <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform overflow-hidden p-1.5">
+            <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain invert" />
           </div>
         </div>
         <div>

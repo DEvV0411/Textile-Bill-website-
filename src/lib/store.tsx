@@ -102,6 +102,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'BULK_ADD_CUSTOMERS':
       return { ...state, customers: [...state.customers, ...action.payload] };
 
+    case 'ADD_PRODUCT':
+      return { ...state, products: [...state.products, action.payload] };
+
     default:
       return state;
   }

@@ -32,7 +32,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#020617] overflow-hidden">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#020617] overflow-y-auto lg:overflow-hidden no-scrollbar">
       {/* LEFT SIDE: Immersive Branding */}
       <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden group">
         <motion.div 
@@ -49,14 +49,15 @@ export default function LoginPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-5"
           >
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-              <Zap size={24} className="text-white fill-white/20" />
+            <div className="flex items-center justify-center p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10">
+              <img src="/images/logo.png" alt="SidZsol" className="h-10 w-auto invert" />
             </div>
+            <div className="h-10 w-[1px] bg-white/20" />
             <div>
-              <h2 className="text-white text-xl font-bold uppercase tracking-widest leading-none">Antigravity</h2>
-              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Industrial Intelligence</p>
+              <h2 className="text-white text-xl font-bold uppercase tracking-widest leading-none">Textile Portal</h2>
+              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1.5">Administrative Console</p>
             </div>
           </motion.div>
 
@@ -99,20 +100,28 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SIDE: Login Form */}
-      <div className="w-full lg:w-[40%] flex flex-col justify-center p-6 sm:p-10 lg:p-24 bg-slate-50 relative">
-        <div className="lg:hidden absolute top-8 left-8 flex items-center gap-3">
-           <Zap size={20} className="text-slate-900" />
-           <span className="text-slate-900 font-black uppercase tracking-tighter">Textile Portal</span>
+      <div className="w-full lg:w-[40%] flex flex-col justify-center p-6 sm:p-10 lg:p-24 bg-white relative min-h-screen lg:min-h-0">
+        <div className="lg:hidden absolute top-0 left-0 right-0 h-64 bg-[#020617] overflow-hidden">
+           <div 
+             className="absolute inset-0 bg-cover bg-center opacity-40 scale-110"
+             style={{ backgroundImage: 'url("/images/login-bg.png")' }}
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent" />
+           <div className="relative z-10 p-10 flex flex-col items-center justify-center h-full text-center">
+              <img src="/images/logo.png" alt="SidZsol" className="h-12 w-auto invert mb-4" />
+              <div className="w-12 h-[2px] bg-blue-500 mb-4" />
+              <span className="text-white font-black uppercase tracking-widest text-xs">Textile Portal V2.4</span>
+           </div>
         </div>
 
-        <div className="w-full max-w-sm mx-auto">
+        <div className="w-full max-w-sm mx-auto mt-72 lg:mt-0 pb-10 lg:pb-0">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-12"
+            className="mb-8"
           >
-            <h3 className="text-4xl font-black text-slate-900 tracking-tighter mb-4">Portal Access</h3>
-            <p className="text-slate-500 font-medium">Verify your credentials to enter the administrative environment.</p>
+            <h3 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tighter mb-4">Portal Access</h3>
+            <p className="text-slate-500 font-medium text-sm">Verify your credentials to enter the administrative environment.</p>
           </motion.div>
 
           <form onSubmit={handleLogin} className="space-y-6">

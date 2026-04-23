@@ -12,6 +12,8 @@ import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
+import ProductForm from './ProductForm';
+
 // ─── Stock Item Card ─────────────────────────────────────────────────────────
 function StockItem({ product, index }: { product: Product; index: number }) {
   const isLow = product.currentStock < product.lowStockThreshold;
@@ -87,6 +89,7 @@ export default function InventoryOverview() {
   const { state } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
 
   const filtered = state.products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,13 +107,16 @@ export default function InventoryOverview() {
           <p className="text-slate-500 text-sm mt-1">Manage physical stock, lots, and warehouse levels.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <button className="btn-ghost !h-11 px-5 w-full sm:w-auto">
-            <History size={18} />
-            Stock Ledger
+          <button 
+            onClick={() => setShowProductModal(true)}
+            className="btn-ghost !h-11 px-5 w-full sm:w-auto border border-slate-200"
+          >
+            <Plus size={18} />
+            Add Product SKU
           </button>
           <button onClick={() => setShowAddModal(true)} className="btn-primary !h-11 w-full sm:w-auto text-sm">
-            <Plus size={18} />
-            Purchase Inward
+            <Warehouse size={18} />
+            Stock Inward
           </button>
         </div>
       </div>
@@ -203,6 +209,9 @@ export default function InventoryOverview() {
       <AnimatePresence>
         {showAddModal && (
           <StockInwardModal onClose={() => setShowAddModal(false)} />
+        )}
+        {showProductModal && (
+          <ProductForm onClose={() => setShowProductModal(false)} />
         )}
       </AnimatePresence>
     </div>
@@ -325,9 +334,6 @@ function StockInwardModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </motion.div>
-    </div>
-  );
-}
     </div>
   );
 }

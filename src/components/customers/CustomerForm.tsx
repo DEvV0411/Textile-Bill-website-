@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   X, Plus, Trash2, CheckCircle, AlertCircle, Save, 
@@ -86,6 +86,14 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'legal' | 'addresses' | 'contacts'>('details');
   const [form, setForm] = useState<Customer>(customer || emptyCustomer(generateCustomerCode(state.customers.length + 1)));
   const [errors, setErrors] = useState<FormErrors>({});
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeTab]);
 
   const validate = (): boolean => {
     const e: FormErrors = {};
@@ -180,7 +188,7 @@ export default function CustomerForm({ customer, onClose }: CustomerFormProps) {
           </div>
 
           {/* Form Area */}
-          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}

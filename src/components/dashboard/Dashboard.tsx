@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, IndianRupee, FileText, Users, ShoppingBag, Clock, Calendar } from 'lucide-react';
 import { useApp } from '@/lib/store';
+import { Invoice } from '@/lib/types';
 import { formatINRCompact, cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -85,75 +86,90 @@ function KPICard({ title, value, prefix = '', suffix = '', icon, change, compact
   );
 }
 
+import InvoiceViewer from '@/components/billing/InvoiceViewer';
+
 // ─── Recent Activity ──────────────────────────────────────────────────────────
 function RecentActivity() {
   const { state, dispatch, navigate } = useApp();
+  const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const recent = state.invoices.slice(-6).reverse();
 
   return (
-    <div className="premium-card overflow-hidden border-slate-200 shadow-sm">
-      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-900">Recent Invoices</h3>
-        <button onClick={() => navigate('invoice')} className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
-          View All →
-        </button>
-      </div>
-      
-      <div className="divide-y divide-slate-50">
-        {recent.length === 0 ? (
-          <div className="text-center py-20 text-slate-400">
-            <FileText size={40} className="mx-auto mb-4 opacity-20" />
-            <p className="text-xs font-bold uppercase tracking-widest">No activity found</p>
-          </div>
-        ) : (
-          recent.map((inv, i) => (
-            <motion.div
-              key={inv.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.05 }}
-              className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                <FileText size={18} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-900 uppercase tracking-tight truncate">{inv.number}</p>
-                <p className="text-[10px] font-medium text-slate-500 mt-0.5 truncate uppercase tracking-tighter">{inv.customerName}</p>
-              </div>
-              <div className="text-right flex items-center gap-4">
-                <div className="hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900 italic">{formatINRCompact(inv.total)}</p>
-                  <div className="mt-1">
-                    <StatusBadge status={inv.status} small />
-                  </div>
+    <>
+      <div className="premium-card overflow-hidden border-slate-200 shadow-sm">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-900">Recent Invoices</h3>
+          <button onClick={() => navigate('reports')} className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
+            View All →
+          </button>
+        </div>
+        
+        <div className="divide-y divide-slate-50">
+          {recent.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <FileText size={40} className="mx-auto mb-4 opacity-20" />
+              <p className="text-xs font-bold uppercase tracking-widest">No activity found</p>
+            </div>
+          ) : (
+            recent.map((inv, i) => (
+              <motion.div
+                key={inv.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => setViewInvoice(inv)}
+                className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-all cursor-pointer group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                  <FileText size={18} />
                 </div>
-                {inv.status !== 'PAID' && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const payment = {
-                        id: 'pay-' + Math.random().toString(36).substring(2, 5),
-                        amount: inv.total,
-                        mode: 'Cash' as const,
-                        referenceNo: 'REC-' + inv.number,
-                        date: new Date().toISOString()
-                      };
-                      dispatch({ type: 'ADD_PAYMENT', payload: { invoiceId: inv.id, payment } });
-                      toast.success('Payment recorded successfully!');
-                    }}
-                    className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
-                    title="Quick Mark Paid"
-                  >
-                    <IndianRupee size={16} />
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          ))
-        )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-900 uppercase tracking-tight truncate">{inv.number}</p>
+                  <p className="text-[10px] font-medium text-slate-500 mt-0.5 truncate uppercase tracking-tighter">{inv.customerName}</p>
+                </div>
+                <div className="text-right flex items-center gap-4">
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-bold text-slate-900 italic">{formatINRCompact(inv.total)}</p>
+                    <div className="mt-1">
+                      <StatusBadge status={inv.status} small />
+                    </div>
+                  </div>
+                  {inv.status !== 'PAID' && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const payment = {
+                          id: 'pay-' + Math.random().toString(36).substring(2, 5),
+                          amount: inv.total,
+                          mode: 'Cash' as const,
+                          referenceNo: 'REC-' + inv.number,
+                          date: new Date().toISOString()
+                        };
+                        dispatch({ type: 'ADD_PAYMENT', payload: { invoiceId: inv.id, payment } });
+                        toast.success('Payment recorded successfully!');
+                      }}
+                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
+                      title="Quick Mark Paid"
+                    >
+                      <IndianRupee size={16} />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
-    </div>
+
+      <AnimatePresence>
+        {viewInvoice && (
+          <InvoiceViewer 
+            invoice={viewInvoice} 
+            onClose={() => setViewInvoice(null)} 
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

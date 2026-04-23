@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/lib/store';
 import Sidebar, { MobileBottomNav } from '@/components/layout/Sidebar';
 import Dashboard from '@/components/dashboard/Dashboard';
@@ -16,6 +16,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Home() {
   const { state } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#020617]">
+        {/* Empty state or simple loader that matches initial server structure */}
+      </div>
+    );
+  }
 
   const renderPage = () => {
     switch (state.currentPage) {

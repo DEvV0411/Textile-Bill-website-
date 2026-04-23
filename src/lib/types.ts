@@ -184,4 +184,5 @@ export type AppAction =
   | { type: 'INCREMENT_INVOICE_COUNTER' }
   | { type: 'LOGIN' }
   | { type: 'LOGOUT' }
-  | { type: 'BULK_ADD_CUSTOMERS'; payload: Customer[] };
+  | { type: 'BULK_ADD_CUSTOMERS'; payload: Customer[] }
+  | { type: 'ADD_PRODUCT'; payload: Product };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Upload, FileText, Loader2, Download } from 'lucide-react';
 import { useApp } from '@/lib/store';
@@ -8,7 +8,13 @@ import { Customer, CustomerGroup, RegType, CustomerStatus, PaymentTerms } from '
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 
-// PDF.js will be dynamically loaded to avoid SSR issues
+// Helper for safe ID generation
+const generateSafeId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15);
+};
 
 interface ImportCustomersModalProps {
   onClose: () => void;
@@ -27,7 +33,7 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
       skipEmptyLines: true,
       complete: (results: Papa.ParseResult<unknown>) => {
         const customers = (results.data as Record<string, unknown>[]).map((row) => ({
-          id: crypto.randomUUID(),
+          id: generateSafeId(),
           code: (row.Code as string) || (row.code as string) || `CUST-${Math.floor(Math.random() * 10000)}`,
           legalName: (row['Legal Name'] as string) || (row.legalName as string) || (row.Name as string) || (row.name as string) || 'Unknown',
           tradeName: (row['Trade Name'] as string) || (row.tradeName as string) || (row['Legal Name'] as string) || (row.Name as string) || 'Unknown',
@@ -66,9 +72,10 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
   const processPDF = async (file: File) => {
     setIsLoading(true);
     try {
-      // Dynamic import to avoid SSR 'DOMMatrix' error
       const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      // Fix for PDF.js 5+ worker loading
+      const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -77,28 +84,79 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: unknown) => (item as { str: string }).str)
-          .join(' ');
-        fullText += pageText + '\n';
+        
+        // Group items by Y coordinate with 5px tolerance to preserve rows
+        const items = textContent.items as { str: string; transform: number[] }[];
+        const rows: { [key: number]: string[] } = {};
+        
+        items.forEach(item => {
+          const rawY = item.transform[5];
+          // Find existing row within 5px tolerance
+          const targetY = Object.keys(rows).find(y => Math.abs(Number(y) - rawY) < 5);
+          const yKey = targetY ? Number(targetY) : rawY;
+          
+          if (!rows[yKey]) rows[yKey] = [];
+          rows[yKey].push(item.str);
+        });
+        
+        // Sort rows by Y (top to bottom)
+        const sortedY = Object.keys(rows).map(Number).sort((a, b) => b - a);
+        sortedY.forEach(y => {
+          fullText += rows[y].join('  ') + '\n';
+        });
       }
 
       const foundCustomers: Partial<Customer>[] = [];
-      
       const gstinRegex = /\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}/g;
       const phoneRegex = /[6-9]\d{9}/g;
       
-      const gstins = Array.from(fullText.matchAll(gstinRegex)).map(m => m[0]);
-      const phones = Array.from(fullText.matchAll(phoneRegex)).map(m => m[0]);
+      const lines = fullText.split('\n');
       
-      if (gstins.length > 0) {
+      lines.forEach((line) => {
+        const gstMatch = line.match(gstinRegex);
+        if (gstMatch) {
+          const gst = gstMatch[0];
+          const phoneMatch = line.match(phoneRegex);
+          
+          // Strategy 1: Look for text separated by double spaces
+          const parts = line.split('  ').filter(p => p.trim().length > 3);
+          let possibleName = parts.find(p => !p.match(gstinRegex) && !p.match(phoneRegex) && !p.includes('CLIENT NAME') && !p.includes('SIDZSOL'));
+          
+          // Strategy 2: If double space fails, look for text before the GST with single space
+          if (!possibleName) {
+            const beforeGst = line.split(gst)[0].trim();
+            if (beforeGst.length > 3 && !beforeGst.includes('CLIENT NAME')) {
+              possibleName = beforeGst;
+            }
+          }
+          
+          if (possibleName) {
+            // Clean up the name (remove common header noise)
+            const cleanName = possibleName.split('CONTACT')[0].trim();
+            
+            if (cleanName.length > 2) {
+              foundCustomers.push({
+                id: generateSafeId(),
+                legalName: cleanName.toUpperCase(),
+                gstin: gst,
+                phone: phoneMatch ? phoneMatch[0] : '',
+                status: 'Active' as CustomerStatus,
+                code: `CUST-${Math.floor(Math.random() * 10000)}`,
+              } as Partial<Customer>);
+            }
+          }
+        }
+      });
+
+      if (foundCustomers.length === 0) {
+        // Fallback to simple extraction
+        const gstins = Array.from(fullText.matchAll(gstinRegex)).map(m => m[0]);
         gstins.forEach((gst, idx) => {
           foundCustomers.push({
-            id: crypto.randomUUID(),
+            id: generateSafeId(),
             legalName: `Detected Client ${idx + 1}`,
             gstin: gst,
-            phone: phones[idx] || '',
-            status: 'Active',
+            status: 'Active' as CustomerStatus,
             code: `CUST-${Math.floor(Math.random() * 10000)}`,
           } as Partial<Customer>);
         });
@@ -111,7 +169,8 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
         toast.success(`Heuristic scan found ${foundCustomers.length} clients`);
       }
     } catch (err: unknown) {
-      toast.error('Extraction Error: ' + (err as Error).message);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast.error('Extraction Error: ' + message);
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +193,7 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
     if (importPreview.length === 0) return;
     
     const finalCustomers: Customer[] = importPreview.map(c => ({
-      id: c.id || crypto.randomUUID(),
+      id: c.id || generateSafeId(),
       code: c.code || `CUST-${Math.floor(Math.random() * 10000)}`,
       legalName: c.legalName || 'Unknown',
       tradeName: c.tradeName || c.legalName || 'Unknown',
@@ -169,7 +228,7 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
   };
 
   const downloadSample = () => {
-    const csvContent = "data:text/csv;charset=utf-8,Code,Legal Name,Trade Name,Group,Phone,Email,City,State,PinCode,GSTIN,PAN\nC001,Example Textiles,ExText,Wholesale,9876543210,info@example.com,Mumbai,Maharashtra,400001,27AAAAA0000A1Z5,ABCDE1234F";
+    const csvContent = "data:text/csv;charset=utf-8,Code,Legal Name,Trade Name,Group,Phone,Email,City,State,PinCode,GSTIN,PAN\nC001,Example Textiles,ExText,Wholesale,9876543210,info@example.com,Mumbai,Maharashtra,400001,27AAAAA0000A1Z5,ABCDE1234F\nC002,Gujarat Fabrics,GujFab,Wholesale,9123456789,contact@gujfab.com,Surat,Gujarat,395003,24G FABR1234A1Z5,GFABR1234A";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -179,12 +238,71 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
     document.body.removeChild(link);
   };
 
+  const downloadSamplePDF = async () => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      doc.setFillColor(2, 6, 23);
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SIDZSOL TECHNOLOGIES', 20, 25);
+      
+      doc.setFontSize(10);
+      doc.text('CLIENT LEDGER IMPORT SCHEMA (V2.4)', 20, 32);
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.text('Sample Customer Data for OCR Testing', 20, 55);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('The following data is formatted for heuristic extraction by the Textile Portal.', 20, 62);
+      
+      doc.setDrawColor(0, 0, 0);
+      doc.line(20, 70, 190, 70);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CLIENT NAME', 25, 76);
+      doc.text('GSTIN NUMBER', 80, 76);
+      doc.text('CONTACT', 140, 76);
+      doc.line(20, 78, 190, 78);
+      
+      const data = [
+        { name: 'MAHALAXMI SYNTEX PVT LTD', gst: '24AAAAA0000A1Z5', phone: '9825012345' },
+        { name: 'KESHAV TEXTILES EXPORTS', gst: '24BBBBB1111B1Z5', phone: '9904412345' },
+        { name: 'RADHE KRISHNA FABRICS', gst: '24CCCCC2222C1Z5', phone: '9712398765' },
+        { name: 'SHREE BALAJI TRADERS', gst: '24DDDDD3333D1Z5', phone: '9898011223' },
+        { name: 'OM SAI RAM CREATIONS', gst: '24EEEEE4444E1Z5', phone: '9033055667' },
+      ];
+      
+      data.forEach((row, i) => {
+        const y = 86 + (i * 12);
+        doc.text(row.name, 25, y);
+        doc.text(row.gst, 80, y);
+        doc.text(row.phone, 140, y);
+        doc.line(20, y + 4, 190, y + 4);
+      });
+      
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated for SidZsol Technologies Administrative Demonstration.', 20, 280);
+      
+      doc.save('sample_customer_ledger.pdf');
+      toast.success('Sample PDF Generated');
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.98, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.98, y: 10 }}
         className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200"
       >
         <div className="p-8 border-b border-slate-100 flex items-center justify-between">
@@ -263,6 +381,13 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
                   <p className="text-xs text-slate-500 leading-relaxed font-medium uppercase tracking-tighter">
                     Heuristic extraction for PDF ledgers. Manual verification is recommended.
                   </p>
+                  <button 
+                    onClick={downloadSamplePDF}
+                    className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-900 uppercase tracking-widest hover:underline"
+                  >
+                    <Download size={14} />
+                    Download Sample PDF
+                  </button>
                 </div>
               </div>
             </div>
@@ -294,13 +419,6 @@ export default function ImportCustomersModal({ onClose }: ImportCustomersModalPr
                         <td className="px-6 py-4 text-slate-500 font-bold uppercase">{c.city || 'LOCAL'}</td>
                       </tr>
                     ))}
-                    {importPreview.length > 10 && (
-                      <tr>
-                        <td colSpan={3} className="px-6 py-4 text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                          + {importPreview.length - 10} additional entries
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
