@@ -290,29 +290,29 @@ export default function InvoiceCreation() {
       {/* MAIN: Itemization */}
       <div className="flex-1 flex flex-col gap-6 min-w-0">
         <div className="premium-card flex-1 flex flex-col overflow-hidden border-slate-200">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
-            <div className="flex items-center gap-4">
+          <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white sticky top-0 z-10">
+            <div className="flex items-center justify-between sm:justify-start gap-4">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Draft Transaction</h2>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 uppercase tracking-tight">Draft Transaction</h2>
+                <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                   {generateInvoiceNumber(state.invoiceCounter)} • {formatDate(today())}
                 </p>
               </div>
               <button 
                 onClick={() => setShowProductSearch(true)}
-                className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all border border-slate-100"
+                className="p-2.5 bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all border border-slate-100"
                 title="Search Product (S)"
               >
                 <Search size={18} />
               </button>
             </div>
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
               {(['Tax Invoice', 'Estimate'] as InvoiceType[]).map(t => (
                 <button
                   key={t}
                   onClick={() => setInvoiceType(t)}
                   className={cn(
-                    "px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                    "flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all",
                     invoiceType === t ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"
                   )}
                 >
