@@ -101,20 +101,20 @@ export default function LoginPage() {
 
       {/* RIGHT SIDE: Login Form */}
       <div className="w-full lg:w-[40%] flex flex-col justify-center p-6 sm:p-10 lg:p-24 bg-white relative min-h-screen lg:min-h-0">
-        <div className="lg:hidden absolute top-0 left-0 right-0 h-64 bg-[#020617] overflow-hidden">
+        <div className="lg:hidden w-full h-48 bg-[#020617] overflow-hidden relative">
            <div 
              className="absolute inset-0 bg-cover bg-center opacity-40 scale-110"
              style={{ backgroundImage: 'url("/images/login-bg.png")' }}
            />
            <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent" />
            <div className="relative z-10 p-10 flex flex-col items-center justify-center h-full text-center">
-              <img src="/images/logo.png" alt="SidZsol" className="h-12 w-auto invert mb-4" />
-              <div className="w-12 h-[2px] bg-blue-500 mb-4" />
-              <span className="text-white font-black uppercase tracking-widest text-xs">Textile Portal V2.4</span>
+              <img src="/images/logo.png" alt="SidZsol" className="h-10 w-auto invert mb-3" />
+              <div className="w-8 h-[2px] bg-blue-500 mb-3" />
+              <span className="text-white font-black uppercase tracking-widest text-[10px]">Textile Portal V2.4</span>
            </div>
         </div>
 
-        <div className="w-full max-w-sm mx-auto mt-72 lg:mt-0 pb-10 lg:pb-0">
+        <div className="w-full max-w-sm mx-auto mt-10 lg:mt-0 pb-10 lg:pb-0">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
